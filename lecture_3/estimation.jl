@@ -19,6 +19,17 @@ using PlutoUI, Plots, LaTeXStrings
 
 # ╔═╡ 7ca378c8-c1dd-4e4f-acdd-a3cdf8500f07
 md"""
+# Continuous estimation task (sound localization)
+
+In this notebook, we will simulate a very simple example of continuous estimation task, such as the sound localization task we saw in class. In this task, on each trial, a stimulus ``s`` is drawn from a distribution controlled by the experimenter (Gaussian with mean ``\mu`` and standard deviation ``\sigma_s``). The subject has to provide a report ``\hat{s}`` of the value of the stimulus. For this example, we will assume that:
+1. the measurement distribution ``p(x|s)`` is Gaussian, centered around ``s`` with standard deviation ``\sigma``;
+2. the subject has perfect knowledge of the stimulus distribution ``p(s)`` and of the measurement distribution;
+3. the perceptual process of the subject is well modeled by a process of unconscious Bayesian inference, and the subject's report on a given trial coincides with the mean of the posterior distribution computed by the subject from a certain value of ``x``.
+
+Below, we will set up a simulation of the experiment and we will show how to infer, from the data we collect in the lab (``s`` and ``\hat{s}`` for a certain number of trials ``N``), the only free parameter of the model: the level of sensory noise ``\sigma``.
+
+## Task parameters
+
 Center of the stimulus distribution:
 ``\mu = ``$(@bind μ Slider(-4:0.01:4, default=0, show_value=true))
 
@@ -45,6 +56,8 @@ end
 
 # ╔═╡ a9d2643e-fba5-43b1-be40-dd66069ba072
 md"""
+## Simulating subject behavior
+
 Now we generate data according to
 ```math
 p(\hat{s}|s) = \frac{1}{\sqrt{2\pi\sigma_{\hat{s}}^2}}\exp{\left[-\frac{(\hat{s}-\mu_\hat{s})^2}{2\sigma_{\hat{s}}^2}\right]}
@@ -79,8 +92,15 @@ begin
 	ylabel!(L"Response $\hat{s}$")
 end
 
+# ╔═╡ d7a94ca9-f45a-4c78-b54e-8b89201bedc7
+md"""
+Note how, in general, the response ``\hat{s}`` is biased towards the center of the prior ``\mu``, and that the intensity of this bias depends on the relative width of the prior ``\sigma_s`` and of the likelihood ``\sigma``.
+"""
+
 # ╔═╡ f510786f-0e3a-43e6-8297-9ade0c12f2e1
 md"""
+## Explaining subject behavior with our Bayesian model of perception
+
 Now, as experimenters, given the data in the table above we would like to infer the only free parameter in our model: the sensory noise ``\sigma``. **Below, to distinguish the true value of ``\sigma`` from values of the sensory noise hypotesized by the experimenter, we will call the hypothesized value ``\rho``.** We start by defining a likelihood function which captures the goodness-of-fit of our behavioral model for a particular value of ``\rho``. Note that all values of the "true" parameters defined above (``\mu``, ``\sigma_s``, ``\sigma``) are considered fixed.
 
 The likelihood function for the n-th trial, where ``s=s_n`` and ``\hat{s}=\hat{s}_n``, is the probability of observing response ``\hat{s}`` if the stimulus was ``s`` and assuming that the internal noise was ``\rho``. This is just the response distribution ``p(\hat{s}|s)`` as computed above, where we use the hypothesized value ``\rho`` of the internal noise instead of the true value ``\sigma``:
@@ -119,7 +139,7 @@ By using the definition of ``p(\hat{s}|s)`` above, we can rewrite this as
 # ╔═╡ fbf73072-9364-4912-9ba5-54fa3528ebb0
 function log_likelihood(ρ)
 	Jᵨ = 1/ρ^2
-	μᵨ = (Jᵨ.*s .+ Jₛ*μ)/(Jᵨ + Jₛ)
+	μᵨ = (Jᵨ*s .+ Jₛ*μ)/(Jᵨ + Jₛ)
 	σᵨ = Jᵨ/(Jᵨ+Jₛ) * ρ
 	sum(@. -(ŝ-μᵨ)^2/(2σᵨ^2)) - N/2 * log(2π*σᵨ^2)
 end
@@ -132,7 +152,7 @@ begin
 	plot(
 		ρ_range, ll,
 		xlabel="Hypothesized sensory noise in experimenter's model (ρ)",
-		ylabel="Log-likelihood",
+		ylabel=L"Log-likelihood $\mathcal{L}(\rho)$",
 		label="Log-likelihood of model"
 	)
 	vline!(
@@ -155,7 +175,7 @@ end
 # ╔═╡ c250dca7-13b5-4ed9-9091-322b9a0538cd
 md"""By evaluating ``\mathcal{L}(\rho)`` over a range of possible values of ``\rho`` we find that the value that maximises the log-likelihood is
 
-``\rho^*`` = $(ρ_range[argmax(ll)]).
+**``\rho^*`` = $(ρ_range[argmax(ll)]).**
 
 This corresponds to a log-likelihood value of ``\mathcal{L}(\rho)`` = $(round(maximum(ll),digits=2)).
 
@@ -1264,11 +1284,12 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╠═6c49cd62-bf68-4f3f-84a9-cb311e79f5d4
+# ╟─6c49cd62-bf68-4f3f-84a9-cb311e79f5d4
 # ╟─7ca378c8-c1dd-4e4f-acdd-a3cdf8500f07
 # ╟─73cc9884-64b6-44df-9959-783064c421b9
 # ╟─a9d2643e-fba5-43b1-be40-dd66069ba072
 # ╟─0d719472-3649-491d-8674-b3502f85af9c
+# ╟─d7a94ca9-f45a-4c78-b54e-8b89201bedc7
 # ╟─f510786f-0e3a-43e6-8297-9ade0c12f2e1
 # ╠═fbf73072-9364-4912-9ba5-54fa3528ebb0
 # ╟─b892d392-c1a0-4f01-9d6c-7b35a19f9f71

@@ -30,6 +30,8 @@ Below, we will set up a simulation of the experiment and we will show how to inf
 
 ## Task parameters
 
+We start by choosing the task parameters that are under the control of the experimenter.
+
 Center of the stimulus distribution:
 ``\mu = ``$(@bind μ Slider(-4:0.01:4, default=0, show_value=true))
 
@@ -58,7 +60,7 @@ end
 md"""
 ## Simulating subject behavior
 
-Now we generate data according to
+Now we generate behavioral data according to the response distribution:
 ```math
 p(\hat{s}|s) = \frac{1}{\sqrt{2\pi\sigma_{\hat{s}}^2}}\exp{\left[-\frac{(\hat{s}-\mu_\hat{s})^2}{2\sigma_{\hat{s}}^2}\right]}
 ```
@@ -70,7 +72,7 @@ where
 \end{gather*}
 ```
 and the intensity of sensory noise is
-``\sigma = ``$(@bind σ Slider(0.2:0.01:2.5, default=0.5, show_value=true)).
+``\sigma = ``$(@bind σ Slider(0.2:0.01:2.5, default=0.5, show_value=true)). Note that **we need to pick a value of ``\sigma`` to simulate the experiment, but this value is unknown to us as experimenters; it is an internal property of the subject.**
 
 After generating the data, we display it as a stimulus-response scatterplot below, where each dot represents one trial.
 """

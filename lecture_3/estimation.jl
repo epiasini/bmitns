@@ -111,7 +111,7 @@ where
 ```math
 \begin{gather*}
 \mu_\rho(s) = \frac{(1/\rho)^2 \cdot s+(1/\sigma_s)^2\cdot\mu}{(1/\rho)^2+(1/\sigma_s)^2}\\
-\sigma_\hat{s}(s) = \frac{1/\rho}{(1/\rho)^2+(1/\sigma_s)^2}
+\sigma_\rho(s) = \frac{1/\rho}{(1/\rho)^2+(1/\sigma_s)^2}
 \end{gather*}
 ```
 
@@ -131,7 +131,7 @@ By using the definition of ``p(\hat{s}|s)`` above, we can rewrite this as
 ```math
 \begin{align}
 \mathcal{L}(\rho) &= \sum_{n=1}^N \log\left[\frac{1}{\sqrt{2\pi\sigma_{\rho}^2}}\exp{\left[-\frac{(\hat{s}_n-\mu_\rho(s))^2}{2\sigma_{\rho}^2}\right]}\right]\\
-&=  - \frac{N}{2}\log\left(2\pi\sigma_\rho^2\right) - \sum_{n=1}^N \frac{(\hat{s}_n-s_\rho(s))^2}{2\sigma_\rho^2}
+&=  - \frac{N}{2}\log\left(2\pi\sigma_\rho^2\right) - \sum_{n=1}^N \frac{(\hat{s}_n-\mu_\rho(s))^2}{2\sigma_\rho^2}
 \end{align}
 ```
 """

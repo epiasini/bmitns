@@ -2,12 +2,12 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="210mm"
-   height="297mm"
-   viewBox="0 0 210 297"
+   width="74.287979mm"
+   height="108.19438mm"
+   viewBox="0 0 74.287979 108.19438"
    version="1.1"
    id="svg5"
-   inkscape:version="1.2 (1:1.2.1+202207142221+cd75a1ee6d)"
+   inkscape:version="1.3 (1:1.3+202307231459+0e150ed6c4)"
    sodipodi:docname="grating.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -25,9 +25,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.0907016"
-     inkscape:cx="404.78532"
-     inkscape:cy="482.25839"
+     inkscape:zoom="0.2726754"
+     inkscape:cx="102.6862"
+     inkscape:cy="298.89018"
      inkscape:window-width="1916"
      inkscape:window-height="1041"
      inkscape:window-x="0"
@@ -122,7 +122,8 @@
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="translate(-80.14469,-48.873878)">
     <circle
        style="fill:url(#pattern2939);fill-opacity:1;stroke:#696969;stroke-width:0.581001;stroke-linejoin:round;stop-color:#000000"
        id="path234"
@@ -146,22 +147,22 @@
        cy="-98.230362"
        r="34.10482" />
     <path
-       style="fill:#ffeeaa;stroke:#d80000;stroke-width:1;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;stop-color:#000000;marker-start:url(#marker3446);marker-end:url(#Arrow3)"
+       style="fill:#ffeeaa;stroke:#d80000;stroke-width:1;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#marker3446);marker-end:url(#Arrow3);stop-color:#000000"
        d="m 118.0607,66.953876 17.95103,5.954826"
        id="path3169" />
     <text
        xml:space="preserve"
-       style="font-weight:bold;font-size:12.7px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial Bold';letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;stroke-width:0.264583;fill:#d80000;fill-opacity:1"
+       style="font-weight:bold;font-size:12.7px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial Bold';letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#d80000;fill-opacity:1;stroke-width:0.264583"
        x="126.14966"
        y="64.323479"
        id="text3574"><tspan
          sodipodi:role="line"
          id="tspan3572"
-         style="font-size:12.7px;stroke-width:0.264583;fill:#d80000;fill-opacity:1"
+         style="font-size:12.7px;fill:#d80000;fill-opacity:1;stroke-width:0.264583"
          x="126.14966"
          y="64.323479">s</tspan></text>
     <path
-       style="fill:#ffeeaa;stroke:#d80000;stroke-width:2;stroke-linejoin:round;stroke-dasharray:2,2;stroke-opacity:1;stop-color:#000000;stroke-dashoffset:0"
+       style="fill:#ffeeaa;stroke:#d80000;stroke-width:2;stroke-linejoin:round;stroke-dasharray:2, 2;stroke-dashoffset:0;stroke-opacity:1;stop-color:#000000"
        d="M 113.54436,48.881692 C 112.9633,123.24535 112.9633,123.24535 112.9633,123.24535"
        id="path3165"
        inkscape:export-filename="grating.png"

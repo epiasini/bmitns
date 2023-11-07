@@ -184,7 +184,7 @@ The simulation function defined above can be used as follows:
 ```julia
 s, nₛ, lₛ = simulate_experiment(σ, N)
 ```
-The function will return the simulated experimental data, namely an array of stimulus levels `s`, an array of trial counts `nₛ` (one value per stimulus level) and an array of "choose +1" counts `lₛ` (also one value per stimulus level).
+The function will return the simulated experimental data, namely an array of stimulus levels `s`, an array of trial counts `nₛ` (one value per stimulus level) and an array of "choose 1" counts `lₛ` (also one value per stimulus level).
 
 Once we have the data, we will fit the ideal observer defined by the Bayesian model above by maximum likelihood. This means we'll have to define a (log-)likelihood function ``\mathcal{L}(\sigma) = \ln p(nₛ,lₛ|\sigma)``, and then we'll have to find the value ``\hat{\sigma}`` that maximises ``\mathcal{L}(\sigma)``.
 
@@ -200,7 +200,7 @@ Compute the log-likelihood for the sensory noise value `σ`, when the experiment
 # Arguments
 - `s::Array{Float64}`: the stimulus levels.
 - `nₛ::Array{Int64}`: the number of trials for each stimulus level.
-- `lₛ::Array{Int64}`: the number of times that the subject reported "+1" for each stimulus level.
+- `lₛ::Array{Int64}`: the number of times that the subject reported "1" (``\\hat{c}=1``) for each stimulus level.
 """
 function log_likelihood(σ, s, nₛ, lₛ)
     # Note that Distributions.jl  provides a function `logcdf` which computes "log of a cumulative distribution" directly. This is a bit better from a numerical standpoint than just writing log(cdf(...)).
@@ -221,7 +221,7 @@ Fit the ideal observer to the experimental data by compute the value of σ that 
 # Arguments
 - `s::Array{Float64}`: the stimulus levels.
 - `nₛ::Array{Int64}`: the number of trials for each stimulus level.
-- `lₛ::Array{Int64}`: the number of times that the subject reported "+1" for each stimulus level.
+- `lₛ::Array{Int64}`: the number of times that the subject reported "1" (``\\hat{c}=1``) for each stimulus level.
 """
 function fit_model_to_data(s, nₛ, lₛ)
 
@@ -266,10 +266,10 @@ function plot_psychometric(σ, N, display_behavioral_variance)
     p_plot = cdf.(Normal(), s_plot_range/σ)
     plot(s_plot_range, p_plot, color="blue", label="Theoretical (ground-truth) psychometric")
 
-	# probability of choosing category c=+1 for each stimulus level in the experiment according to the ideal observer model. This is the same that we used when generating data above as well as when we fitted the ideal observer, but we re-compute it here and assign it to the variable `p` for convenience
+	# probability of choosing category c=1 for each stimulus level in the experiment according to the ideal observer model. This is the same that we used when generating data above as well as when we fitted the ideal observer, but we re-compute it here and assign it to the variable `p` for convenience
     p = @. cdf(Normal(), s/σ)
 	
-    # display behavioral variance expected from the model (std. dev. of the Binomial distribution associated with the number of "report +1" at each stimulus level).
+    # display behavioral variance expected from the model (std. dev. of the Binomial distribution associated with the number of "report 1" at each stimulus level).
     if display_behavioral_variance
         plot!(s,
 			p,
@@ -302,7 +302,7 @@ function plot_psychometric(σ, N, display_behavioral_variance)
     
     # cosmetic adjustments
     xlabel!("Stimulus s")
-    ylabel!("Fraction of \"choose +1\"")
+    ylabel!("Fraction of \"choose 1\", \$p(\\hat{c}=1|s)\$")
 end
 
 # ╔═╡ 2503f16f-6f45-4e76-9cfb-dcc730a89588

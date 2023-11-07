@@ -166,11 +166,11 @@ function simulate_experiment(σ, N)
     # number of trials per level of the stimulus, after accounting for the trial distribution above. Unless you modify trial_distribution above, this has simply the effect of generating an array that looks like [n, n, ..., n], where n=N/length(s)).
     nₛ = @. round(N * trial_distribution)
     
-    # compute probability of choosing category c=1 for each stimulus level in the experiment
-    p = @. cdf(Normal(), s/σ)
+    # compute probability pₛ of choosing category ĉ=1 for each stimulus level s in the experiment
+    pₛ = @. cdf(Normal(), s/σ)
     
-    # generate empirical data: for each level, sample n_trials_per_level choices from a Binomial distribution
-    lₛ = @. rand(Binomial(nₛ, p))
+    # generate empirical data: for each level s, sample nₛ choices from a Binomial distribution with probability of "success" (→ choosing ĉ=1) equal to p
+    lₛ = @. rand(Binomial(nₛ, pₛ))
 
 	return s, nₛ, lₛ
 end

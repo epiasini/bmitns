@@ -184,6 +184,8 @@ The simulation function defined above can be used as follows:
 ```julia
 s, nₛ, lₛ = simulate_experiment(σ, N)
 ```
+The function will return the simulated experimental data, namely an array of stimulus levels `s`, an array of trial counts `nₛ` (one value per stimulus level) and an array of "choose +1" counts `lₛ` (also one value per stimulus level).
+
 Once we have the data, we will fit the ideal observer defined by the Bayesian model above by maximum likelihood. This means we'll have to define a (log-)likelihood function ``\mathcal{L}(\sigma) = \ln p(nₛ,lₛ|\sigma)``, and then we'll have to find the value ``\hat{\sigma}`` that maximises ``\mathcal{L}(\sigma)``.
 
 We define the log-likelihood function below:
@@ -1684,7 +1686,7 @@ version = "1.4.1+1"
 # ╟─b0c73730-7ce0-11ee-07ce-91a26488edee
 # ╟─d29f6eee-a18e-4632-9562-eeacb055d4de
 # ╠═183e83e7-2667-4d4d-b0c5-e38dc52223bf
-# ╠═269a09b2-e9ec-42ab-b2e2-eaa74424cff3
+# ╟─269a09b2-e9ec-42ab-b2e2-eaa74424cff3
 # ╠═3183db1f-5677-49e1-82f5-314cd4f2581a
 # ╟─af5f6405-b862-4a64-8cd1-05954192e20a
 # ╠═eaa8a68f-67d0-4721-8385-1f6d0003d612

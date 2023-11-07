@@ -22,6 +22,8 @@ md"""
 # Binary classification
 This notebook contains a simple demonstration of Bayesian modeling for a binary classification task. For more information about the theory, see Chapter 8 in Ma, Körding and Goldreich, *Bayesian Models of Perception and Action*, MIT press 2022 ([pdf available from the authors' website](https://www.cns.nyu.edu/malab/bayesianbook.html)).
 
+Note that unlike in the previous demo/notebook, I have left most of the code visible in this demo. That way, you should hopefully be able to understand how the math is translated into code, concretely. Note also that if you are opening this demo in Pluto on your own computer you can always inspect the code for each cell and modify it.
+
 ## Description of the experiment
 We perform a classification experiment, where the stimulus ``s`` could belong to one of two classes (which we call ``1`` and ``0`` by convention). For instance, we may show to the subject an oriented grating of variable orientation ``s``, and we ask the subject to report whether the grating is oriented to the left ``s<0`` or to the right ``s>0``.
 
@@ -67,15 +69,19 @@ The model likelihood is simply, by definition, the probability of observing the 
 However, our dataset ``\mathcal{D}`` is composed by many trials. Since each trial is statistically independent, to obtain the probability of observing all of them we can simply multiply the probabilities calculated for each individual trial. To do so, we divide them in two different sets, the set of trials where the response was ``\hat{c}=1`` and the set of trials where the response was ``\hat{c}=0``. We get:
 
 ```math
-\mathcal{L}(\sigma) = p(\mathcal{D}|\sigma) = \prod_{t:\hat{c}_t=1}p(\hat{c}=1|s_t) \times \prod_{t:\hat{c}_t=0}p(\hat{c}=0|s_t)\\
- = \prod_{t:\hat{c}_t=1}p(\hat{c}=1|s_t) \times \prod_{t:\hat{c}_t=0}\left[1-p(\hat{c}=1|s_t)\right]
+\begin{gather*}
+\mathcal{L}(\sigma) &= p(\mathcal{D}|\sigma) = \prod_{t:\hat{c}_t=1}p(\hat{c}=1|s_t) \times \prod_{t:\hat{c}_t=0}p(\hat{c}=0|s_t)\\
+ &= \prod_{t:\hat{c}_t=1}p(\hat{c}=1|s_t) \times \prod_{t:\hat{c}_t=0}\left[1-p(\hat{c}=1|s_t)\right]
+\end{gather*}
 ```
 
 Now we use a trick: remembering that, for any ``x``, ``x^1=x`` and ``x^0=1``, we can re-write this product as
 
 ```math
-\mathcal{L}(\sigma) = \prod_{t=1}^N p(\hat{c}=1|s_t)^{\hat{c}_t} \times \left[1-p(\hat{c}=1|s_t)\right]^{(1-\hat{c}_t)}\\
-= \prod_{t=1}^N \Phi\left(\frac{s_t}{\sigma}\right)^{\hat{c}_t} \times \left[1-\Phi\left(\frac{s_t}{\sigma}\right)\right]^{(1-\hat{c}_t)}
+\begin{gather*}
+\mathcal{L}(\sigma) &= \prod_{t=1}^N p(\hat{c}=1|s_t)^{\hat{c}_t} \times \left[1-p(\hat{c}=1|s_t)\right]^{(1-\hat{c}_t)}\\
+&= \prod_{t=1}^N \Phi\left(\frac{s_t}{\sigma}\right)^{\hat{c}_t} \times \left[1-\Phi\left(\frac{s_t}{\sigma}\right)\right]^{(1-\hat{c}_t)}
+\end{gather*}
 ```
 
 This is because on the trials where ``\hat{c}_t=1`` the second term of the product above will be raised to the zeroth power (if ``\hat{c}_t=1``, then ``1-\hat{c}_t=0``) and therefore it will not contribute to the product - again, because anything raised to the zeroth power is 1 and multiplying anything by 1 does not make any difference. Conversely, on the trials where ``\hat{c}_t=0`` the first term of the product will not contribute, leaving only the second.
@@ -89,8 +95,10 @@ Now we have our likelihood function, which depends on ``\sigma`` through the fac
 we can write our **log likelihood** as
 
 ```math
-\ln \mathcal{L}(\sigma) = \sum_{t=1}^N\left[\hat{c}_t\ln p(\hat{c}=1|s_t) + \left(1-\hat{c}_t\right)\ln\left(1-p(\hat{c}=1|s_t)\right)\right]\\
- = \sum_{t=1}^N\left[\hat{c}_t\ln \Phi(s_t/\sigma) + \left(1-\hat{c}_t\right)\ln\left(1-\Phi(s_t/\sigma)\right)\right]
+\begin{gather*}
+\ln \mathcal{L}(\sigma) &= \sum_{t=1}^N\left[\hat{c}_t\ln p(\hat{c}=1|s_t) + \left(1-\hat{c}_t\right)\ln\left(1-p(\hat{c}=1|s_t)\right)\right]\\
+ &= \sum_{t=1}^N\left[\hat{c}_t\ln \Phi(s_t/\sigma) + \left(1-\hat{c}_t\right)\ln\left(1-\Phi(s_t/\sigma)\right)\right]
+\end{gather*}
 ```
 
 At this point we are done. In the expression above, ``\Phi`` is a known function, implemented in any language, and ``s_t`` and ``\hat{c}_t`` are what makes up our experimental data. The only unknown is ``\sigma``. We can then **plug this function into any numerical optimization algorithm** (which you can find built-in into all scientific/data oriented languages and packages, Python/Julia/R/Matlab...) **to find the value of ``\sigma`` that maximises ``\mathcal{L}``**.
@@ -107,8 +115,10 @@ Now, if we define:
 we get:
 
 ```math
-\ln \mathcal{L}(\sigma) = \sum_{s=-s_K}^{s_K} \left[l_s \ln p(\hat{c}=1|s) + (n_s-l_s) \ln\left(1-p(\hat{c}=1|s)\right)\right] \\
-= \sum_{s=-s_K}^{s_K} \left[l_s \ln \Phi(s/\sigma) + (n_s-l_s) \ln\left(1-\Phi(s/\sigma)\right) \right] \\
+\begin{gather*}
+\ln \mathcal{L}(\sigma) &= \sum_{s=-s_K}^{s_K} \left[l_s \ln p(\hat{c}=1|s) + (n_s-l_s) \ln\left(1-p(\hat{c}=1|s)\right)\right] \\
+&= \sum_{s=-s_K}^{s_K} \left[l_s \ln \Phi(s/\sigma) + (n_s-l_s) \ln\left(1-\Phi(s/\sigma)\right) \right]
+\end{gather*}
 ```
 
 which is a very simple expression depending only on the stimulus values ``s`` and the **counts** of how many trials there were for that stimulus values and in how many of those trials the subject reported ``c=1``. And of course on ``\sigma``, as the only free parameter of our model. Again, we can now take this expression and feed it to some optimization algorithm to find numerically the value of ``\sigma`` that gives the largest ``\ln \mathcal{L}(\sigma)``.
@@ -139,69 +149,138 @@ Where does this difference come from, conceptually? How come we have two differe
 # ╔═╡ d29f6eee-a18e-4632-9562-eeacb055d4de
 md"""
 ## Simulation
-Now we create a simulated experiment. An instance of the experiment is defined by a true value for $\sigma$ and a value of the total number $N$ of trials in the experiment (other parameters such as the values taken by the stimulus $s$ are hardcoded below for simplicity). With rather poor coding practice, we encapsulate everything into a function `plot_psychometric` that generates the simulated data, fits the ideal observer to obtain an estimate of $\sigma$ from the data, and then makes a plot showing the "ground truth" psychometric, the simulated data, and the fitted psychometric.
+Now we create a simulated experiment. An instance of the experiment is defined by a true value for $\sigma$ and a value of the total number $N$ of trials in the experiment (other parameters such as the values taken by the stimulus $s$ are hardcoded below for simplicity). So we start by defining a function that, given $\sigma$ and $N$, can generate a synthetic dataset, effectively simulating one run of the experiment.
+"""
 
-Note that this is a key advantage of our modeling framework: our Bayesian models of perception are **generative models**. They allow our experiment + analysis to be tested out in simulation before we collect any data in the lab.
+# ╔═╡ 183e83e7-2667-4d4d-b0c5-e38dc52223bf
+function simulate_experiment(σ, N)
+    # values of the stimulus s to be used (hardcoded here for simplicity)
+    s = [-4, -3, -2, -1, -0.5, 0, 0.5, 1, 2, 3, 4]
+	
+    # relative amount of trials to be allocated to each level. By default this is uniform (all numbers are equal to nₛ as passed to this function), but you can try changing it to see what happens. Note that if you "weigh" one stimulus level a lot by putting more trials there than in other levels, the fit will automatically value that datapoint more than the others, trying to make the fitted curve approach more the data at that point. This is very useful, as often in the lab one ends up with more data in certain conditions than others.
+    trial_distribution = ones(length(s))
+	# for instance, if you want to put more weight on one particular datapoint, you can uncomment the following line
+	# trial_distribution = [1,1,1,1,1,1,1,1,10,1,1]
+	trial_distribution /= sum(trial_distribution)
+	
+    # number of trials per level of the stimulus, after accounting for the trial distribution above. Unless you modify trial_distribution above, this has simply the effect of generating an array that looks like [n, n, ..., n], where n=N/length(s)).
+    nₛ = @. round(N * trial_distribution)
+    
+    # compute probability of choosing category c=+1 for each stimulus level in the experiment
+    p = @. cdf(Normal(), s/σ)
+    
+    # generate empirical data: for each level, sample n_trials_per_level choices from a Binomial distribution
+    lₛ = rand.(Binomial.(nₛ, p))
+
+	return s, nₛ, lₛ
+end
+
+# ╔═╡ 269a09b2-e9ec-42ab-b2e2-eaa74424cff3
+md"""
+This is a good moment for stressing a key advantage of our modeling framework: our Bayesian models of perception are **generative models**, in the sense that they **force** us to express all our hypotheses about the experiment down to the level of detail that is sufficient for us to generate artificial datasets. As a result, they allow our experiment + analysis approach to be tested out in simulation before we collect any data in the lab!
+
+## Fitting our model to the (simulated) experimental data
+The simulation function defined above can be used as follows:
+```julia
+s, nₛ, lₛ = simulate_experiment(σ, N)
+```
+Once we have the data, we will fit the ideal observer defined by the Bayesian model above by maximum likelihood. This means we'll have to define a (log-)likelihood function ``\mathcal{L}(\sigma) = \ln p(nₛ,lₛ|\sigma)``, and then we'll have to find the value ``\hat{\sigma}`` that maximises ``\mathcal{L}(\sigma)``.
+
+We define the log-likelihood function below:
 """
 
 # ╔═╡ 3183db1f-5677-49e1-82f5-314cd4f2581a
-function log_likelihood(σ, choice_1_counts, s_levels, n_trials_per_levels)
-    lₛ = choice_1_counts
-    s = s_levels
-    nₛ = n_trials_per_levels
-    # Note that Distributions.jl  provides a special function to compute "log of a cumulative gaussian", which is a bit better from a numerical standpoint than just writing log(cdf(Normal(),...)).
-	trial_loglikelihoods = @. lₛ * logcdf(Normal(), s/σ) + (nₛ-lₛ) * logcdf(Normal(),-s/σ)
-	sum(trial_loglikelihoods)
+"""
+	log_likelihood(σ, s, nₛ, lₛ)
+
+Compute the log-likelihood for the sensory noise value `σ`, when the experimental data is defined by `s`, `nₛ`, and `lₛ`.
+
+# Arguments
+- `s::Array{Float64}`: the stimulus levels.
+- `nₛ::Array{Int64}`: the number of trials for each stimulus level.
+- `lₛ::Array{Int64}`: the number of times that the subject reported "+1" for each stimulus level.
+"""
+function log_likelihood(σ, s, nₛ, lₛ)
+    # Note that Distributions.jl  provides a function `logcdf` which computes "log of a cumulative distribution" directly. This is a bit better from a numerical standpoint than just writing log(cdf(...)).
+	sum( @. lₛ * logcdf(Normal(), s/σ) + (nₛ-lₛ) * logcdf(Normal(), -s/σ) )
 end
+
+# ╔═╡ af5f6405-b862-4a64-8cd1-05954192e20a
+md"""
+Now we define a function that, given the experimental data, will fit the ideal observer model and return our best estimate of the sensory noise σ.
+"""
+
+# ╔═╡ eaa8a68f-67d0-4721-8385-1f6d0003d612
+"""
+	fit_model_to_data(s, nₛ, lₛ)
+
+Fit the ideal observer to the experimental data by compute the value of σ that maximizes the log-likelihood of the model.
+
+# Arguments
+- `s::Array{Float64}`: the stimulus levels.
+- `nₛ::Array{Int64}`: the number of trials for each stimulus level.
+- `lₛ::Array{Int64}`: the number of times that the subject reported "+1" for each stimulus level.
+"""
+function fit_model_to_data(s, nₛ, lₛ)
+
+	# Fix the empirical data in the log-likelihood function defined above, so that we obtain a function that only depends on σ (Note that this is actually closer to the true definition of a likelihood function, where the data is considered constant and only the model parameters can vary). Note also that our optimization library can find *minima*, not *maxima* of functions, so to define a "function to be minimized" (as opposed to a function to be maximized) we just put a minus sign in front of the log likelihood. In practice, instead of maximising the log-likelihood, we will minimize the "minus log likelihood"; these two operations are mathematically equivalent.
+    function function_to_be_minimized(σ)
+        -log_likelihood(σ, s, nₛ, lₛ)
+	end
+
+	# fit model to empirical data, by searching for the value of σ within a given range (here we use 0.01<σ<100) that maximizes the log-likelihood (minimizes the minus log likelihood)
+	sol = optimize(function_to_be_minimized, 0.01, 100)
+
+	# extract maximum-likelihood value of σ from the data structure sol, which also contains other information about the optimization process
+	σ̂ = sol.minimizer
+
+end
+
+# ╔═╡ 37b67c62-9f1e-4eff-bc4b-ebafd4a2860e
+md"""
+We are now ready to put everything together. Below, we define a function that simulates some data, fits the model on that data, and makes a plot.
+
+The plot contains:
+- the ground-truth psychometric curve computed from the true value of σ;
+- error bars around the ground-truth psychometric, showing the expected range of variability (standard deviation) in behavior when the true value of σ is fixed (remember than even for a fixed value of the true sensory noise σ the behavior is still stochastic!);
+- the simulated data;
+- the estimated psychometric curve, computed from the value of σ obtained by fitting the ideal observer model to the data.
+"""
 
 # ╔═╡ e923d0dc-1e83-409a-8417-9beee7280bbb
 function plot_psychometric(σ, N, display_behavioral_variance)
-    
-    # values of s to be used
-    s_levels = [-4, -3, -2, -1, -0.5, 0, 0.5, 1, 2, 3, 4]
-    # relative amount of trials to be allocated to each level. By default this is uniform (all numbers are equal), but you can try changing it to see what happens. Note that if you "weigh" one stimulus level a lot by putting more trials there than in other levels, the fit will automatically value that datapoint more than the others, trying to make the fitted curve approach more the data at that point. This is very useful, as often in the lab one ends up with more data in certain conditions than others.
-    trial_distribution = [1,1,1,1,1,1,1,1,1,1,1]
-    # number of trials per level of the stimulus. This is just the total number N, divided among the levels according to the ratios in trial_distributions above.
-    n_trials_per_level = @. round(N*trial_distribution/sum(trial_distribution))
-    
-    # compute probability of choosing category c=+1 for each stimulus level in the experiment
-    p = @. cdf(Normal(), s_levels/σ)
-    
-    # generate empirical data: for each level, sample n_trials_per_level choices from a Binomial distribution
-    l = rand.(Binomial.(n_trials_per_level, p))
 
-    
-    # fit empirical data with psychometric function. Note that our optimization library can find *minima*, not *maxima* of functions, so instead of directly maximising the log-likelihood we minimize the "minus log likelihood" (which is the same).
-    function function_to_be_minimized(σ)
-        -log_likelihood(σ, l, s_levels, n_trials_per_level)
-	end
+	# run simulation of the experiment (generate empirical data)
+	s, nₛ, lₛ = simulate_experiment(σ, N)
 
-	sol = optimize(function_to_be_minimized, 0.01, 100)
+	# from the simulated data, infer value of σ by fitting the model to the data by maximum likelihood
+	σ̂ = fit_model_to_data(s, nₛ, lₛ)
 	
-	σ̂ = sol.minimizer
-   
     # plot theoretical psychometric function
     s_plot_range = range(
-		start=minimum(s_levels),
-		stop=maximum(s_levels),
+		start=minimum(s),
+		stop=maximum(s),
 		length=100)
     p_plot = cdf.(Normal(), s_plot_range/σ)
     plot(s_plot_range, p_plot, color="blue", label="Theoretical (ground-truth) psychometric")
-    
+
+	# probability of choosing category c=+1 for each stimulus level in the experiment according to the ideal observer model. This is the same that we used when generating data above as well as when we fitted the ideal observer, but we re-compute it here and assign it to the variable `p` for convenience
+    p = @. cdf(Normal(), s/σ)
+	
     # display behavioral variance expected from the model (std. dev. of the Binomial distribution associated with the number of "report +1" at each stimulus level).
     if display_behavioral_variance
-        plot!(s_levels,
+        plot!(s,
 			p,
 			color="blue",
 			markersize=0,
 			seriestype=:scatter,
 			label="",
-			yerr=@.sqrt(n_trials_per_level*p*(1-p))/n_trials_per_level)
+			yerr=@.sqrt(nₛ*p*(1-p))/nₛ)
 	end
     
     # plot empirical data
-    plot!(s_levels,
-		l./n_trials_per_level,
+    plot!(s,
+		lₛ./nₛ,
 		color="red",
 		seriestype=:scatter,
 		label="Simulated data")
@@ -221,20 +300,28 @@ function plot_psychometric(σ, N, display_behavioral_variance)
     
     # cosmetic adjustments
     xlabel!("Stimulus s")
-    ylabel!("Fraction of 'choose +1'")
+    ylabel!("Fraction of \"choose +1\"")
 end
 
 # ╔═╡ 2503f16f-6f45-4e76-9cfb-dcc730a89588
 md"""
 True sensory noise: ``σ = ``$(@bind σ Slider(0.01:0.01:6, default=1, show_value=true))
 
-Number of trials per stimulus level: ``N = ``$(@bind N Slider(1:500, default=100, show_value=true))
+Total number of trials: ``N = ``$(@bind N Slider(10:1000, default=100, show_value=true))
 
-Display expected behavioral variance: $(@bind display_behavioral_variance CheckBox(default=true))
+Display expected behavioral variability: $(@bind display_behavioral_variance CheckBox(default=true))
 """
 
 # ╔═╡ 2ebc3daf-d425-4069-a7dd-b976eefa811d
 plot_psychometric(σ, N, display_behavioral_variance)
+
+# ╔═╡ 4c3f00e4-46e5-4de1-99ee-f3cb5c91c82e
+md"""
+From the plot above, we note/observe that:
+- our model fitting procedure is generally able to obtain a reasonable estimate of the value of σ (thankfully!);
+- the variability of the measured behavior goes down as we increase the number of samples;
+- the fitting procedure takes into account the expected variability of behavior, by giving more weight/importance to the data points where the expected variability is smaller. This is easier to see if you go inside the definition of `simulate_experiment` and change the `trial_distribution` variable.
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1596,9 +1683,15 @@ version = "1.4.1+1"
 # ╠═ba37b3cc-8fca-4d16-bcc6-571be1f0010c
 # ╟─b0c73730-7ce0-11ee-07ce-91a26488edee
 # ╟─d29f6eee-a18e-4632-9562-eeacb055d4de
+# ╠═183e83e7-2667-4d4d-b0c5-e38dc52223bf
+# ╠═269a09b2-e9ec-42ab-b2e2-eaa74424cff3
 # ╠═3183db1f-5677-49e1-82f5-314cd4f2581a
+# ╟─af5f6405-b862-4a64-8cd1-05954192e20a
+# ╠═eaa8a68f-67d0-4721-8385-1f6d0003d612
+# ╟─37b67c62-9f1e-4eff-bc4b-ebafd4a2860e
 # ╠═e923d0dc-1e83-409a-8417-9beee7280bbb
 # ╟─2503f16f-6f45-4e76-9cfb-dcc730a89588
-# ╠═2ebc3daf-d425-4069-a7dd-b976eefa811d
+# ╟─2ebc3daf-d425-4069-a7dd-b976eefa811d
+# ╟─4c3f00e4-46e5-4de1-99ee-f3cb5c91c82e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

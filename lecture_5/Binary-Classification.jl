@@ -30,7 +30,7 @@ We perform a classification experiment, where the stimulus ``s`` could belong to
 $(LocalResource("./grating.svg", :width => 100))
 
 In the lab, we perform ``N`` trials and for each trial ``t`` we record:
-- the true value of the stimulus, ``s_t`` (which is known to us, - we are the ones generating the stimulus, so we know its true value
+- the true value of the stimulus, ``s_t`` (which is known to us: we are the ones generating the stimulus, so we know its true value)
 - the class reported by the subject, ``\hat{c}_t``. We can indicate our experimental dataset ``\mathcal{D}`` with the notation ``\mathcal{D}=\left\{(s_t,\hat{c}_t)\right\}_{t=1}^N``.
 
 # Building the model

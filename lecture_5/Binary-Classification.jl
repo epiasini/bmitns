@@ -143,7 +143,7 @@ Unsurprisingly, if we take the log we find that this likelihood is closely relat
 ```
 
 $(html"<span style='color: red; font-weight: bold;'>Question/exercise:</span>")
-Where does this difference come from, conceptually? How come we have two different likelihoods for the same data and the same model? Does it matter which one we use to find the best value of ``\sigma`` for the data?
+Where does the difference between the two likelihood functions come from, conceptually? How come we have two different likelihoods for the same data and the same model? Does it matter which one we use to find the best value of ``\sigma`` for the data?
 """
 
 # ╔═╡ d29f6eee-a18e-4632-9562-eeacb055d4de
@@ -170,7 +170,7 @@ function simulate_experiment(σ, N)
     p = @. cdf(Normal(), s/σ)
     
     # generate empirical data: for each level, sample n_trials_per_level choices from a Binomial distribution
-    lₛ = rand.(Binomial.(nₛ, p))
+    lₛ = @. rand(Binomial(nₛ, p))
 
 	return s, nₛ, lₛ
 end

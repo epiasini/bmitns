@@ -618,7 +618,7 @@ end
 
 # ╔═╡ 6fb30817-fb0e-4cb5-abe4-a4ba83e109ff
 md"""
-#### Compare model fits with predictions from the theory
+### Conclusion - comparing the fits with the predictions from the theory
 
 $(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Hermundstad2014_fig_3A.png", :width => 600))
 """

@@ -84,15 +84,15 @@ It can be shown that ``0<\Lambda<1``, and that for a channel to have nonzero gai
 # ╔═╡ 7152e1e9-f83d-4600-8245-e09dca2efec4
 begin
 	function gain(sₖ, Λ)
-	    @. sqrt(max((-(2+sₖ^2) + sqrt(sₖ^4 + 4*sₖ^2/Λ))/(2*(1+sₖ^2)), 0))
+	    sqrt(max((-(2+sₖ^2) + sqrt(sₖ^4 + 4*sₖ^2/Λ))/(2*(1+sₖ^2)), 0))
 	end
 	
 	function output_power(sₖ, Λ)
-	    @. gain(sₖ, Λ)^2 * (1+sₖ^2) + 1
+	    gain(sₖ, Λ)^2 * (1+sₖ^2) + 1
 	end
 	
-	function total_output_power(s, Λ)
-	    return sum(output_power(s, Λ))
+	function total_output_power(s_range, Λ)
+	    return sum(output_power.(s_range, Λ))
 	end
 end
 
@@ -132,17 +132,17 @@ begin
 	    ylabel!("Total output variance")
 	    title!("Output variance 'budget'")
 
-	    p2 = plot(s, gain(s, Λ_range[1]), color=:gray, linewidth=0.2, legend=false)
+	    p2 = plot(s, gain.(s, Λ_range[1]), color=:gray, linewidth=0.2, legend=false)
 	    for l in Λ_range[2:end]
-	        plot!(s, gain(s, l), color=:gray, linewidth=0.2, legend=false)
+	        plot!(s, gain.(s, l), color=:gray, linewidth=0.2, legend=false)
 		end
-	    plot!(s, gain(s, Λ), color=:red)
+	    plot!(s, gain.(s, Λ), color=:red)
 	    title!("Transfer function")
 	    xlabel!(L"Input strength for a given channel, $s_k$")
 	    ylabel!(L"Channel gain, $g_k$")
 	    
 	    p3 = bar((1:length(s)).+0.2, s, bar_width=0.4, label="Input signal strength")
-	    bar!((1:length(s)).-0.2, sqrt.(output_power(s, Λ)), bar_width=0.4, label="Output dynamic range")
+	    bar!((1:length(s)).-0.2, sqrt.(output_power.(s, Λ)), bar_width=0.4, label="Output dynamic range")
 	    hline!([1], label="Noise floor", linewidth=2)
 	    xticks!(([0, 7, 14], ["1", "8", "15"]))
 	    xlabel!("Channel")

@@ -101,7 +101,7 @@ md"""
 ### Interactive display
 In the plot below, we can look at the solution of the problem just described for a particular case where there are ``K=15`` channels. Each channel has a different input signal strength. However, all signal strengths can be scaled together with one parameter that we pass to the interactive plot. for instance, when this parameter is 1, the signal strengths of the 15 channels are regularly distributed in the interval ``[0.5, 2]``. More generally, for a certain value ``s`` of the signal strength parameter, they will be distributed in the interval ``[s/2, 2s]``. The idea is that in this way we can look at how channels with different signal strengths get processed differently according to the efficient coding prescription.
 
-The other parameter we can manipulate in the interactive plot is the output budget ``Q``. We do so by setting the parameter ``\Lambda``. Since ``\Lambda`` is defined in such a way that ``\Lambda\rightarrow 0`` corresponds to a large output budgeet and ``\Lambda\rightarrow 1`` corresponds to a small output budget, the slider below actually controls ``1-\Lambda``. In this way, sliding it to the right increases the budget.
+The other parameter we can manipulate in the interactive plot is the output budget ``Q``. We do so by setting the parameter ``\Lambda``. Since ``\Lambda`` is defined in such a way that ``\Lambda\rightarrow 0`` corresponds to a large output budget and ``\Lambda\rightarrow 1`` corresponds to a small output budget, the slider below actually controls ``1-\Lambda``. In this way, sliding it to the right increases the budget.
 
 ### What to pay attention to
 By playing with the interactive plot, it should be possible to find **two different coding regimes**.

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.32
+# v0.19.30
 
 using Markdown
 using InteractiveUtils
@@ -16,7 +16,7 @@ end
 
 # ╔═╡ fa084448-889d-11ee-3172-c3c4348be3b0
 begin
-	using PlutoUI, DataFrames, Downloads, CSV, Compose, Base, Plots, LaTeXStrings, Distributions
+	using PlutoUI, Distributions, DataFrames, Downloads, CSV, Compose, Base, Plots, LaTeXStrings, LogExpFunctions, Roots, Optim, LinearAlgebra
 
 	TableOfContents()
 end
@@ -24,6 +24,11 @@ end
 # ╔═╡ 3c9e3ee3-3398-4792-ba27-ea0636627faa
 md"""
 # Efficient coding
+
+In this notebook we illustrate some of the results in [Van Hateren, Biological Cybernetics 1992](https://www.doi.org/10.1007/BF00203134), and we show step-by-step how the data collected in  [Caramellino et al, eLife 2021](https://doi.org/10.7554/eLife.72081) can be nicely interpreted using this theory. This exercise is meant to bring together the Bayesian approach to modeling perception we developed in the first part of the course and the notions based on information theory (efficient coding) we developed in the second part.
+
+Some of the code below is visible by default, but some is not. I have chosen to hide by default the code that I think is less illuminating about what's going on (inclusing most of the plotting and the data wrangling), and to leave visible by default the more conceptual parts that can be mapped more directly to the theory. However, remember that you can always download this notebook (by clicking the button on the top right) and open it locally using [Pluto.jl](https://plutojl.org/). This will allow you to see all the code, change it etc etc.
+
 ## Theory recap
 Here I have implemented an interactive diagram to illustrate the ideas in [Van Hateren, Biological Cybernetics 1992](https://www.doi.org/10.1007/BF00203134), using the notation of [Hermundstad et al, eLife 2014](https://doi.org/10.7554/eLife.03722), with a small exception (see below).
 
@@ -210,6 +215,11 @@ begin
 	end
 
 
+	"""
+		sample_texture(statistic, level, height, width=height)
+
+	Sample a maximum-entropy texture from the ensemble defined by the given statistic and the given level for that statistic.
+	"""
 	function sample_texture(statistic, level, height, width=height)
 		
 		if statistic == "γ"
@@ -262,9 +272,11 @@ end
 
 # ╔═╡ e2063dee-b706-4147-aff8-a8575d7f97c2
 md"""
-Statistic to be sampled: $(@bind statistic Select(["γ", "β—", "β|", "β∖", "β∕", "θ◿", "θ◸", "θ◹", "θ◺", "α"]))
+In this study, our visual stimuli will be maximum-entropy visual textures, as defined by [Victor and Conte, J Opt Soc Am 2012](https://doi.org/10.1364/JOSAA.29.001313). In the (hidden) function above I have implemented the algorithm for texture generation described in that paper. To get a sense for how these textures look like, you can play with the generator below. 
 
-Level of the statistic: $(@bind level Slider(-1:0.01:1, default=0, show_value=true))
+Statistic to be sampled ("axis" in texture space): $(@bind statistic Select(["γ", "β—", "β|", "β∖", "β∕", "θ◿", "θ◸", "θ◹", "θ◺", "α"]))
+
+Level of the statistic ("coordinate" in texture space): $(@bind level Slider(-1:0.01:1, default=0, show_value=true))
 """
 
 # ╔═╡ 1b034394-1775-4ea8-8fc3-38832494c4d2
@@ -283,7 +295,7 @@ Texture processing is believed to happen mostly in intermediate visual cortical 
 # ╔═╡ 0355c0dd-7151-4de1-b37b-dc981f0940fa
 md"""
 ### Download and preprocess data
-Now we're going to download the data published with the Caramellino paper.
+Now we're going to download the data published with the Caramellino pape, and to perform some preprocessing to rearrange it in a format that will be useful for us.
 """
 
 # ╔═╡ 7e4759f7-5507-4a15-9255-fd305ec9a1b3
@@ -308,10 +320,10 @@ begin
 	filter!(:statistic_intensity => ∈(possible_stimuli), data)
 	filter!(:experiment_phase => ==(3), data)
 
-	data_gdf = groupby(data, ["rat_batch", "rat_ID", "learned_statistic", "statistic_intensity"])
+	data_gdf = groupby(data, ["rat_batch", "rat_ID", "learned_statistic", "statistic_intensity"], sort=false)
 
 	data = combine(data_gdf, :report_noise => (x -> [length(x) sum(x)]) => [:Ts, :Ns])
-	grouped_data = groupby(data, (["rat_batch", "rat_ID", "learned_statistic"]))
+	grouped_data = groupby(data, (["rat_batch", "rat_ID", "learned_statistic"]), sort=false)
 
 	data
 end
@@ -355,9 +367,9 @@ With this definition, the rat will report "noise" when $D>0$ and
 
 By plugging in the likelihood functions and our choice of prior, we
 get
-````math
+```math
     D(x)= \ln\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left[-\frac{x^2}{2\sigma^2}\right] -\ln\left[\frac{1}{K}\sum_k\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left[-\frac{(x-s_k)^2}{2\sigma^2}\right]\right] + a
-``
+```
 which we can rewrite
 ```math
     D(x)= a + \ln K -\frac{x^2}{2\sigma^2} -\ln\left[\sum_k\exp\left[-\frac{(x-s_k)^2}{2\sigma^2}\right]\right]
@@ -383,17 +395,74 @@ the response distribution is, as usual, a cumulative Gaussian:
 ```math
 p(\text{report noise}|s) = \int_{-\infty}^{x^*}\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left[-\frac{(x-s)^2}{2\sigma^2}\right]\mathrm{d}x = 1-\Phi\left[{\frac{s-x^{*}}{\sigma}}\right]
 ```
-
-Below, we plot ``1-\Phi(z)`` for a generic argument ``z`` to remind ourselves of the shape of this function.
 """
 
-# ╔═╡ d131df07-6afe-40c0-bec7-f2d33746d440
+# ╔═╡ d9ae60c9-0fd8-4c7b-a2d3-4fd737b507fc
 begin
-	z = LinRange(-3,3,100)
-	plot(z, 1 .- cdf(Normal(), z), legend=false)
-	xlabel!("\$z\$")
-	ylabel!("\$1-\\Phi(z)\$")
+	function D(x, p)
+		(a, σ) = p
+		possible_stimuli = 0.02:0.07:1.01
+		K = length(possible_stimuli)
+		a + log(K) - x^2/(2*σ^2) - logsumexp(-(x .- possible_stimuli).^2/(2*σ)^2)
+	end
+
+	function x_star(a, σ)
+		try
+			x_star = find_zero(D, 0, [a σ])
+		catch e
+			# if σ is large enough and a is negative enough, the decision variable D is negative for all values of the measurement. In this regime, the measurement is so noisy and the prior is so shifted towards reporting the presence of the texture that the sensory evidence is completely disregarded, and the answer is always "texture" (never "noise"). In this case, the function call we use above to find x_star will fail with an error, because no zero of the D(x) function can be found. When this happens, we conventionally set x_star to negative infinity. When plugged into the expression for the response distribution, this will yield the desired effect that p(report noise|s)=0 for all values of s.
+			if isa(e, Roots.ConvergenceFailed)
+				if D(0, [a σ]) < 0
+					x_star = -Inf
+				else
+					x_star = Inf
+				end
+			else
+				throw(e)
+			end
+		end
+	end
+
+	function p_rep_noise(s, a, σ)
+		1 - cdf(Normal(), (s-x_star(a, σ))/σ)
+	end
+
+	function plot_response_distribution(a, σ)
+		s_range = LinRange(0, 1, 50)
+		p = plot(s_range, p_rep_noise.(s_range, a, σ), legend=false)
+		xlabel!("True intensity of the statistic \$s\$")
+		ylabel!("Probability of reporting 'noise' \$p(\\hat{s}=0|s)\$")
+		ylims!(0,1)
+		return p
+	end
+
+	function plot_decision_variable_and_response_distribution(a, σ)
+		s_range = LinRange(-0.3, 1, 50)
+		p1 = plot(s_range, D.(s_range, Ref([a, σ])), legend=false)
+		hline!([0], color=:red)
+		xs = x_star(a, σ)
+		if isfinite(xs)
+			vline!([xs], color=:red)
+			annotate!(xs, ylims()[1], Plots.text("\$x^*\$", :red, :bottom, :left))
+		end
+		xlabel!("Measurement \$x\$")
+		ylabel!("Decision variable \$D(x)\$")
+		p2 = plot_response_distribution(a, σ)
+
+		l = @layout [a{0.38w} b]
+		plot(p1, p2, layout=l)
+	end
 end
+
+# ╔═╡ dd829eb7-23a1-4b27-b9cf-82cfbf64226d
+md"""
+α = $(@bind a Slider(-1:0.01:1, default=0, show_value=true))
+
+σ = $(@bind σ Slider(0.05:0.01:0.5, default=0.2, show_value=true))
+"""
+
+# ╔═╡ 83e037e2-582b-4a20-992f-dc9fec9106d9
+plot_decision_variable_and_response_distribution(a, σ)
 
 # ╔═╡ d5134a14-67e7-483d-961d-e9f0b7be30a9
 md"""
@@ -433,6 +502,157 @@ where ``C`` is a constant that does not depend on ``a`` and ``\sigma``.
 Below we implement the calculation of ``LL`` given ``a``, ``\sigma`` and the data. Note that computing this function can be done numerically on a computer, but it wouldn't be possible to do it by hand in closed form because computing ``LL`` requires computing ``p(\text{rep noise}|s, a,\sigma)``, which in turn requires computing ``x^*`` (see definitions above).
 """
 
+# ╔═╡ a4c03618-0ee9-419d-869d-3dd823c0ccf2
+begin
+	function LL(a, σ, s, Ts, Ns)
+	    ps = p_rep_noise.(s, a, σ)
+	    sum(@. Ns * log(ps) + (Ts-Ns) * log(1-ps))
+	end
+end
+
+# ╔═╡ 24920b7f-4022-4607-8460-f7d37dfb54b4
+md"""
+#### Step 4.2 - actually performing the fit
+"""
+
+# ╔═╡ 02999c65-c4bc-4923-bd46-956dfe6aa90b
+begin
+	function fit_model(s, Ts, Ns)
+		
+		function function_to_be_minimized(params)
+		    a, σ = params
+			-LL(a, σ, s, Ts, Ns)
+		end
+		
+		sol = optimize(function_to_be_minimized, [0.1, 0.4], NelderMead())
+		return [sol.minimizer[1] sol.minimizer[2]]
+	end
+
+	fits = combine(grouped_data, [:statistic_intensity, :Ts, :Ns] => fit_model => [:a, :σ])
+end
+
+# ╔═╡ 87cb2f98-14df-493c-bef9-154f622553ef
+md"""
+#### Visualize fit results
+"""
+
+# ╔═╡ b9cc4989-4915-4c93-8d01-2172f6e5710a
+function plot_rat_fit(rat_abs_number)
+	function rat_filter(batch, ID, statistic)
+		batch==fits[rat_abs_number,"rat_batch"] && ID==fits[rat_abs_number,"rat_ID"] &&
+		statistic==fits[rat_abs_number,"learned_statistic"]
+	end
+	rat_data = filter([:rat_batch, :rat_ID, :learned_statistic] =>rat_filter, data)
+
+	plot_response_distribution(fits[rat_abs_number,"a"], fits[rat_abs_number,"σ"])
+	plot!(rat_data.statistic_intensity, rat_data.Ns./rat_data.Ts, seriestype=:scatter)
+	annotate!((0.98, 0.95, Plots.text("Batch: $(fits[rat_abs_number,"rat_batch"]), rat: $(fits[rat_abs_number,"rat_ID"]), statistic: $(fits[rat_abs_number,"learned_statistic"])\na=$(round(fits[rat_abs_number,"a"],digits=2)), σ=$(round(fits[rat_abs_number,"σ"],digits=2))", :right)))
+	
+end
+
+# ╔═╡ f7e03313-4d88-4532-aafa-af8ab54c2fa6
+md"""
+Select global rat ID: $(@bind rat_abs_number Slider(1:nrow(fits), show_value=true))
+"""
+
+# ╔═╡ 868d4ec3-ef1e-4698-b46f-844c764943a6
+plot_rat_fit(rat_abs_number)
+
+# ╔═╡ d82a1862-fb10-4c39-94f6-950589299e5c
+md"""
+We can also look at the fits all at the same time.
+"""
+
+# ╔═╡ 71e38447-bff0-49a2-a03a-b800fca7049d
+begin
+
+	l = @layout [a b; c d]
+
+	plots = []
+	s_range = LinRange(0,1,50)
+
+	for statistic in ["gamma", "beta", "theta", "alpha"]
+		this_stat_rats = filter(:learned_statistic => ==(statistic), fits)
+		p = plot()
+		for row in eachrow(this_stat_rats)
+			rat_batch, rat_ID, statistic, a, σ = Vector(row)
+			plot!(s_range, p_rep_noise.(s_range, a, σ), color=:black, legend=false)
+		end
+		xlabel!("True intensity of the statistic")
+		ylabel!("Probability of reporting 'noise'")
+		ylims!(0,1)
+		annotate!((0.5, 0.95, Plots.text("Statistic: $(statistic)", :center, :top)))
+		push!(plots, p)
+	end
+
+	plot(plots[1], plots[2], plots[3], plots[4], layout=l, size=(800,800))
+
+end
+
+# ╔═╡ c48d9b0c-eeb8-4f17-b3f5-731d812f22b6
+md"""
+A little reminder of what "gamma, beta, theta, alpha" mean:
+
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Hermundstad2014_fig_1_extract.png", :width => 600))
+"""
+
+# ╔═╡ 320feafb-9821-4486-be69-a811b61376fe
+md"""
+Now we can summarize the plots above by plotting the **sensitivity** of each rat, defined as ``1/\sigma``:
+"""
+
+# ╔═╡ a36466c5-df6d-464e-bd2b-ae521c3e31ae
+begin
+
+	transform!(fits, :σ => (x -> 1 ./ x) => :sensitivity)
+
+	plot([0], [1])
+	for (k, statistic) in enumerate(["gamma", "beta", "theta", "alpha"])
+		this_stat_rats = filter(:learned_statistic => ==(statistic), fits)
+		plot!(k .+ 0.3*(rand(nrow(this_stat_rats)).-0.5), this_stat_rats[:,"sensitivity"], seriestype=:scatter, legend=false)
+	end
+	xlabel!("Statistic")
+	ylabel!("Sensitivity")
+	xticks!(([1,2,3,4], ["gamma", "beta", "theta", "alpha"]))
+end
+
+# ╔═╡ 6fb30817-fb0e-4cb5-abe4-a4ba83e109ff
+md"""
+#### Compare model fits with predictions from the theory
+
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Hermundstad2014_fig_3A.png", :width => 600))
+"""
+
+# ╔═╡ ca37fbfb-d715-4dcc-a1f3-7459d8904df7
+begin
+	# human sensitivity to correlated patterns from Hermundstad et al 2014.
+	# Respectively beta (2-point), theta (3-point), and alpha (4-point)
+	human = [0.88489849 0.29890596 0.35722528]
+	
+	# variablity of 2-point, 3-point and 4-point statistics in natural images
+	images = [3.79 1.13 1.44]
+	
+	# compute average sensitivities for rats
+	rat = combine(groupby(fits, :learned_statistic), :sensitivity => mean).sensitivity_mean
+	# discard sensitivity to gamma as that was not examined in humans
+	rat = rat[2:end]
+	
+	# normalize all three sets of empirical data to put them all on the same scale
+	human ./= norm(human)
+	images ./= norm(images)
+	rat ./= norm(rat)
+
+	plot(images', markershape=:circle, label="image std. dev.")
+	plot!(human', markershape=:square, label="human sensitivity")
+	plot!(rat, markershape=:diamond, label="rat sensitivity")
+
+end
+
+# ╔═╡ 42c70357-9178-46e5-bd0c-8a9bedba7b7f
+md"""
+(🎉🎉🎉🎉🎉)
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -442,8 +662,12 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 
 [compat]
 CSV = "~0.10.11"
@@ -451,27 +675,64 @@ Compose = "~0.9.5"
 DataFrames = "~1.6.1"
 Distributions = "~0.25.103"
 LaTeXStrings = "~1.3.1"
+LogExpFunctions = "~0.3.26"
+Optim = "~1.7.8"
 Plots = "~1.39.0"
-PlutoUI = "~0.7.54"
+PlutoUI = "~0.7.53"
+Roots = "~2.0.22"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.4"
+julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "c2200efeb6e0919feef66f04194a3b016b0b8321"
+project_hash = "e47a96ba553893b7047d32ba4b917a21dcd40a98"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
-git-tree-sha1 = "793501dcd3fa7ce8d375a2c878dca2296232686e"
+git-tree-sha1 = "91bd53c39b9cbfb5ef4b015e8b582d344532bd0a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
-version = "1.2.2"
+version = "1.2.0"
+
+[[deps.Adapt]]
+deps = ["LinearAlgebra", "Requires"]
+git-tree-sha1 = "02f731463748db57cc2ebfbd9fbc9ce8280d3433"
+uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
+version = "3.7.1"
+
+    [deps.Adapt.extensions]
+    AdaptStaticArraysExt = "StaticArrays"
+
+    [deps.Adapt.weakdeps]
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 version = "1.1.1"
+
+[[deps.ArrayInterface]]
+deps = ["Adapt", "LinearAlgebra", "Requires", "SparseArrays", "SuiteSparse"]
+git-tree-sha1 = "16267cf279190ca7c1b30d020758ced95db89cd0"
+uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+version = "7.5.1"
+
+    [deps.ArrayInterface.extensions]
+    ArrayInterfaceBandedMatricesExt = "BandedMatrices"
+    ArrayInterfaceBlockBandedMatricesExt = "BlockBandedMatrices"
+    ArrayInterfaceCUDAExt = "CUDA"
+    ArrayInterfaceGPUArraysCoreExt = "GPUArraysCore"
+    ArrayInterfaceStaticArraysCoreExt = "StaticArraysCore"
+    ArrayInterfaceTrackerExt = "Tracker"
+
+    [deps.ArrayInterface.weakdeps]
+    BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
+    BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
+    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+    GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
+    StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
+    Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -508,6 +769,16 @@ git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
 uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.1"
 
+[[deps.ChainRulesCore]]
+deps = ["Compat", "LinearAlgebra"]
+git-tree-sha1 = "e0af648f0692ec1691b5d094b8724ba1346281cf"
+uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+version = "1.18.0"
+weakdeps = ["SparseArrays"]
+
+    [deps.ChainRulesCore.extensions]
+    ChainRulesCoreSparseArraysExt = "SparseArrays"
+
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
 git-tree-sha1 = "cd67fc487743b2f0fd4380d4cbd3a24660d0eec8"
@@ -542,6 +813,17 @@ git-tree-sha1 = "fc08e5930ee9a4e03f84bfb5211cb54e7769758a"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.10"
 
+[[deps.CommonSolve]]
+git-tree-sha1 = "0eee5eb66b1cf62cd6ad1b460238e60e4b09400c"
+uuid = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
+version = "0.2.4"
+
+[[deps.CommonSubexpressions]]
+deps = ["MacroTools", "Test"]
+git-tree-sha1 = "7b8a93dba8af7e3b42fecabf646260105ac373f7"
+uuid = "bbf7d656-a473-5ed7-a52c-81e309532950"
+version = "0.3.0"
+
 [[deps.Compat]]
 deps = ["UUIDs"]
 git-tree-sha1 = "8a62af3e248a8c4bad6b32cbbe663ae02275e32c"
@@ -568,6 +850,20 @@ deps = ["Serialization", "Sockets"]
 git-tree-sha1 = "8cfa272e8bdedfa88b6aefbbca7c19f1befac519"
 uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
 version = "2.3.0"
+
+[[deps.ConstructionBase]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "c53fc348ca4d40d7b371e71fd52251839080cbc9"
+uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
+version = "1.5.4"
+
+    [deps.ConstructionBase.extensions]
+    ConstructionBaseIntervalSetsExt = "IntervalSets"
+    ConstructionBaseStaticArraysExt = "StaticArrays"
+
+    [deps.ConstructionBase.weakdeps]
+    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.Contour]]
 git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
@@ -610,6 +906,22 @@ deps = ["Mmap"]
 git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 version = "1.9.1"
+
+[[deps.DiffResults]]
+deps = ["StaticArraysCore"]
+git-tree-sha1 = "782dd5f4561f5d267313f23853baaaa4c52ea621"
+uuid = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
+version = "1.1.0"
+
+[[deps.DiffRules]]
+deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialFunctions"]
+git-tree-sha1 = "23163d55f885173722d1e4cf0f6110cdbaf7e272"
+uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
+version = "1.15.1"
+
+[[deps.Distributed]]
+deps = ["Random", "Serialization", "Sockets"]
+uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
@@ -694,6 +1006,22 @@ weakdeps = ["SparseArrays", "Statistics"]
     FillArraysSparseArraysExt = "SparseArrays"
     FillArraysStatisticsExt = "Statistics"
 
+[[deps.FiniteDiff]]
+deps = ["ArrayInterface", "LinearAlgebra", "Requires", "Setfield", "SparseArrays"]
+git-tree-sha1 = "c6e4a1fbe73b31a3dea94b1da449503b8830c306"
+uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
+version = "2.21.1"
+
+    [deps.FiniteDiff.extensions]
+    FiniteDiffBandedMatricesExt = "BandedMatrices"
+    FiniteDiffBlockBandedMatricesExt = "BlockBandedMatrices"
+    FiniteDiffStaticArraysExt = "StaticArrays"
+
+    [deps.FiniteDiff.weakdeps]
+    BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
+    BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
 git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
@@ -711,6 +1039,18 @@ deps = ["Printf"]
 git-tree-sha1 = "8339d61043228fdd3eb658d86c926cb282ae72a8"
 uuid = "59287772-0a20-5a39-b81b-1366585eb4c0"
 version = "0.4.2"
+
+[[deps.ForwardDiff]]
+deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
+git-tree-sha1 = "cf0fe81336da9fb90944683b8c41984b08793dad"
+uuid = "f6369f11-7733-5829-9624-2563aa707210"
+version = "0.10.36"
+
+    [deps.ForwardDiff.extensions]
+    ForwardDiffStaticArraysExt = "StaticArrays"
+
+    [deps.ForwardDiff.weakdeps]
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
@@ -905,12 +1245,12 @@ version = "0.16.1"
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
 uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
-version = "0.6.4"
+version = "0.6.3"
 
 [[deps.LibCURL_jll]]
 deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "8.4.0+0"
+version = "7.84.0+0"
 
 [[deps.LibGit2]]
 deps = ["Base64", "NetworkOptions", "Printf", "SHA"]
@@ -919,7 +1259,7 @@ uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 [[deps.LibSSH2_jll]]
 deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
 uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
-version = "1.11.0+1"
+version = "1.10.2+0"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -972,6 +1312,12 @@ git-tree-sha1 = "7f3efec06033682db852f8b3bc3c1d2b0a0ab066"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.36.0+0"
 
+[[deps.LineSearches]]
+deps = ["LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "Printf"]
+git-tree-sha1 = "7bbea35cec17305fc70a0e5b4641477dc0789d9d"
+uuid = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
+version = "7.2.0"
+
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -1018,9 +1364,9 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[deps.MbedTLS]]
 deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "NetworkOptions", "Random", "Sockets"]
-git-tree-sha1 = "c067a280ddc25f196b5e7df3877c6b226d390aaf"
+git-tree-sha1 = "f512dc13e64e96f703fd92ce617755ee6b5adf0f"
 uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
-version = "1.1.9"
+version = "1.1.8"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1044,6 +1390,12 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 version = "2022.10.11"
+
+[[deps.NLSolversBase]]
+deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
+git-tree-sha1 = "a0b464d183da839699f4c79e7606d9d186ec172c"
+uuid = "d41bc354-129a-5804-8e4c-c37616107c6c"
+version = "7.8.3"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
@@ -1089,6 +1441,12 @@ git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
 uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
 version = "0.5.5+0"
 
+[[deps.Optim]]
+deps = ["Compat", "FillArrays", "ForwardDiff", "LineSearches", "LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "PositiveFactorizations", "Printf", "SparseArrays", "StatsBase"]
+git-tree-sha1 = "01f85d9269b13fedc61e63cc72ee2213565f7a72"
+uuid = "429524aa-4258-5aef-a3af-852621145aeb"
+version = "1.7.8"
+
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "51a08fb14ec28da2ec7a927c4337e4332c2a4720"
@@ -1107,9 +1465,15 @@ version = "10.42.0+0"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "4e5be6bb265d33669f98eb55d2a57addd1eeb72c"
+git-tree-sha1 = "f6f85a2edb9c356b829934ad3caed2ad0ebbfc99"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.30"
+version = "0.11.29"
+
+[[deps.Parameters]]
+deps = ["OrderedCollections", "UnPack"]
+git-tree-sha1 = "34c0e9ad262e5f7fc75b10a9952ca7692cfc5fbe"
+uuid = "d96e819e-fc66-5662-9728-84c9c7592b0a"
+version = "0.12.3"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
@@ -1167,15 +1531,21 @@ version = "1.39.0"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "bd7c69c7f7173097e7b5e1be07cee2b8b7447f51"
+git-tree-sha1 = "db8ec28846dbf846228a32de5a6912c63e2052e3"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.54"
+version = "0.7.53"
 
 [[deps.PooledArrays]]
 deps = ["DataAPI", "Future"]
 git-tree-sha1 = "36d8b4b899628fb92c2749eb488d884a926614d3"
 uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
 version = "1.4.3"
+
+[[deps.PositiveFactorizations]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "17275485f373e6673f7e7f97051f703ed5b15b20"
+uuid = "85a6dd25-e78a-55b7-8502-1745935b8125"
+version = "0.2.4"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
@@ -1190,10 +1560,10 @@ uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.4.1"
 
 [[deps.PrettyTables]]
-deps = ["Crayons", "LaTeXStrings", "Markdown", "PrecompileTools", "Printf", "Reexport", "StringManipulation", "Tables"]
-git-tree-sha1 = "3f43c2aae6aa4a2503b05587ab74f4f6aeff9fd0"
+deps = ["Crayons", "LaTeXStrings", "Markdown", "Printf", "Reexport", "StringManipulation", "Tables"]
+git-tree-sha1 = "6842ce83a836fbbc0cfeca0b5a4de1a4dcbdb8d1"
 uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-version = "2.3.0"
+version = "2.2.8"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -1260,6 +1630,24 @@ git-tree-sha1 = "6ed52fdd3382cf21947b15e8870ac0ddbff736da"
 uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
 version = "0.4.0+0"
 
+[[deps.Roots]]
+deps = ["ChainRulesCore", "CommonSolve", "Printf", "Setfield"]
+git-tree-sha1 = "0f1d92463a020321983d04c110f476c274bafe2e"
+uuid = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
+version = "2.0.22"
+
+    [deps.Roots.extensions]
+    RootsForwardDiffExt = "ForwardDiff"
+    RootsIntervalRootFindingExt = "IntervalRootFinding"
+    RootsSymPyExt = "SymPy"
+    RootsSymPyPythonCallExt = "SymPyPythonCall"
+
+    [deps.Roots.weakdeps]
+    ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+    IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
+    SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
+    SymPyPythonCall = "bc8888f7-b21e-4b7c-a06a-5d9c9496438c"
+
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
@@ -1278,6 +1666,12 @@ version = "1.4.1"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+
+[[deps.Setfield]]
+deps = ["ConstructionBase", "Future", "MacroTools", "StaticArraysCore"]
+git-tree-sha1 = "e2cc6d8c88613c05e1defb55170bf5ff211fbeac"
+uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
+version = "1.1.1"
 
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
@@ -1308,12 +1702,15 @@ deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_j
 git-tree-sha1 = "e2cfc4012a19088254b3950b85c3c1d8882d864d"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
 version = "2.3.1"
+weakdeps = ["ChainRulesCore"]
 
     [deps.SpecialFunctions.extensions]
     SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"
 
-    [deps.SpecialFunctions.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+[[deps.StaticArraysCore]]
+git-tree-sha1 = "36b3d696ce6366023a0ea192b4cd442268995a0d"
+uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
+version = "1.4.2"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1416,6 +1813,11 @@ version = "1.5.1"
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
+[[deps.UnPack]]
+git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
+uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
+version = "1.0.2"
+
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
@@ -1481,9 +1883,9 @@ version = "1.6.1"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Zlib_jll"]
-git-tree-sha1 = "da69178aacc095066bad1f69d2f59a60a1dd8ad1"
+git-tree-sha1 = "24b81b59bd35b3c42ab84fa589086e19be919916"
 uuid = "02c8fc9c-b97f-50b9-bbe4-9be30ff0a78a"
-version = "2.12.0+0"
+version = "2.11.5+0"
 
 [[deps.XSLT_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgcrypt_jll", "Libgpg_error_jll", "Libiconv_jll", "Pkg", "XML2_jll", "Zlib_jll"]
@@ -1726,7 +2128,7 @@ version = "1.1.6+0"
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.52.0+1"
+version = "1.48.0+0"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1753,8 +2155,8 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╠═fa084448-889d-11ee-3172-c3c4348be3b0
-# ╟─3c9e3ee3-3398-4792-ba27-ea0636627faa
+# ╟─fa084448-889d-11ee-3172-c3c4348be3b0
+# ╠═3c9e3ee3-3398-4792-ba27-ea0636627faa
 # ╠═7152e1e9-f83d-4600-8245-e09dca2efec4
 # ╟─6141a7c6-02a5-442b-807d-de05e47e6e85
 # ╟─5edc3017-a0c4-433c-90f2-2d1d24c4bab7
@@ -1769,7 +2171,24 @@ version = "1.4.1+1"
 # ╟─0355c0dd-7151-4de1-b37b-dc981f0940fa
 # ╟─7e4759f7-5507-4a15-9255-fd305ec9a1b3
 # ╟─b32c0b97-4af8-402e-972d-0f6d5445ef7e
-# ╟─d131df07-6afe-40c0-bec7-f2d33746d440
+# ╠═d9ae60c9-0fd8-4c7b-a2d3-4fd737b507fc
+# ╟─dd829eb7-23a1-4b27-b9cf-82cfbf64226d
+# ╟─83e037e2-582b-4a20-992f-dc9fec9106d9
 # ╟─d5134a14-67e7-483d-961d-e9f0b7be30a9
+# ╠═a4c03618-0ee9-419d-869d-3dd823c0ccf2
+# ╟─24920b7f-4022-4607-8460-f7d37dfb54b4
+# ╠═02999c65-c4bc-4923-bd46-956dfe6aa90b
+# ╟─87cb2f98-14df-493c-bef9-154f622553ef
+# ╟─b9cc4989-4915-4c93-8d01-2172f6e5710a
+# ╟─f7e03313-4d88-4532-aafa-af8ab54c2fa6
+# ╟─868d4ec3-ef1e-4698-b46f-844c764943a6
+# ╟─d82a1862-fb10-4c39-94f6-950589299e5c
+# ╟─71e38447-bff0-49a2-a03a-b800fca7049d
+# ╟─c48d9b0c-eeb8-4f17-b3f5-731d812f22b6
+# ╟─320feafb-9821-4486-be69-a811b61376fe
+# ╟─a36466c5-df6d-464e-bd2b-ae521c3e31ae
+# ╟─6fb30817-fb0e-4cb5-abe4-a4ba83e109ff
+# ╟─ca37fbfb-d715-4dcc-a1f3-7459d8904df7
+# ╟─42c70357-9178-46e5-bd0c-8a9bedba7b7f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

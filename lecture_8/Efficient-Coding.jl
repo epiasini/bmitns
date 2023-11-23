@@ -524,7 +524,7 @@ begin
 			-LL(a, σ, s, Ts, Ns)
 		end
 		
-		sol = optimize(function_to_be_minimized, [0.1, 0.4], NelderMead())
+		sol = optimize(function_to_be_minimized, [0.1, 0.4])
 		return [sol.minimizer[1] sol.minimizer[2]]
 	end
 

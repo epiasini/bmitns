@@ -63,47 +63,74 @@ After encoding, the signal is transmitted downstream for further processing. For
 Finally, we assume that there is some constraint to the sigal that we can transmit in our output. For example, there could be a metabolic cost to generating signals which limits the firing rates of our neurons. We model this cost by assuming that we have a certain **output budget**, expressed as a constraint on the total variance ``Q`` of the output:
 
 ```math
-Q = \sum_{k=1}^K\operatorname{Var}\left[\text{output}_k\right]\equiv\text{constant}
+\begin{equation}
+\tag{1}
+Q = \sum_{k=1}^K\operatorname{Var}\left[\text{output}_k\right] = \sum_{k=1}^K \left[g_k\left(s_k^2+n_s^2\right)+n_c\right] \equiv\text{constant}
+\end{equation}
 ```
 
 The efficient coding problem for this setting is then: **what are the values of ``g_k`` that maximize the transmitted information ``I[\text{input}:\text{output}]`` if the output budget ``Q`` is fixed to a certain level?**
 
-It can be shown that under these assumptions the solution is
+In class we have shown that under these assumptions the solution is
 
 ```math
+\begin{equation}
+\tag{2}
 g_k = \frac{-(2+s_k^2)+\sqrt{s_k^4+4s_k^2/\Lambda}}{2(1+s_k^2)}
+\end{equation}
 ```
 
-if ``g_k`` thus defined is positive, otherwise ``g_k=0`` (i.e., we "kill" the channel). In this expression, ``\Lambda`` is a Lagrange multiplier that controls ``Q`` (in other words, if we want to impose different values of ``Q``, we do it by changing the value of ``\Lambda``). To simplify the expression, we have also assumed that ``n_c=n_s=1``.
+if ``g_k`` thus defined is positive, otherwise ``g_k=0`` (i.e., we "kill" the channel). In this expression, ``\Lambda`` is a Lagrange multiplier that controls ``Q``, and we showed in class that necessarily ``0<\Lambda<1``.  To simplify the expression, we have also assumed that ``n_c=n_s=1``. In class also we showed that for a channel to have nonzero gain (``g_k>0``, that is, for that channel not to be "killed") the input signal strength must be above a critical threshold ``s_k > \sqrt{\Lambda/(1-\Lambda)}``.
 
-It can be shown that ``0<\Lambda<1``, and that for a channel to have nonzero gain (``g_k>0``, that is, for that channel not to be "killed") the input signal strength must be above a critical threshold ``s_k > \sqrt{\Lambda/(1-\Lambda)}``.
+What does it mean when we say that "``\Lambda`` is a Lagrange multiplier that controls ``Q``", in practice? Consider that ``Q`` always depends on the set of gain values ``\{g_k\}_i^K`` through the expression in Equation 1. But if ``g_k`` is given by Equation 2, where it is a function of ``\Lambda``, this means that ``Q`` depends on ``\Lambda`` through ``g_k``: we can write ``Q=Q(\{g_k(\Lambda)\})=Q(\Lambda)``. So for any value of ``\Lambda`` we have a solution ``g_k`` for each channel, and a corresponding value of the total output power ``Q``. This is an **implicit solution** of our problem (which, remember, was: *given a certain value of ``Q``, how should I pick ``g_k`` to maximise transmitted information?*). In practice, for a given (desired) value of the output power ``Q^*`` we can find ``g_k`` by changing the value of ``\Lambda`` until ``Q=Q(\Lambda)=Q^*`` (using Equation 1). We can call the value of ``\Lambda`` where this happens ``\Lambda^*``. The value of ``g_k`` is then given by ``g_k^*=g_k(\Lambda^*)``. You can see this process in action in the interactive demo below.
 
 **Caveat on the notation:** compared to the notation in Hermundstad et al 2014, we parameterize the gain by its **squared** value, which we indicate with ``g_k``. By contrast, the expressions in the paper are written in terms of the absolute value of the gain ``|L_k|``. The correspondence between the two notations is simply ``g_k=|L_k|^2``.
 """
 
 # ╔═╡ 7152e1e9-f83d-4600-8245-e09dca2efec4
 begin
+	"""
+		gain(sₖ, Λ)
+
+	Optimal gain for a channel, as a function of the input power sₖ (standard deviation) and the Lagrange multiplier Λ.
+	"""
 	function gain(sₖ, Λ)
 	    sqrt(max((-(2+sₖ^2) + sqrt(sₖ^4 + 4*sₖ^2/Λ))/(2*(1+sₖ^2)), 0))
 	end
-	
+
+	"""
+		output_power(sₖ, Λ)
+
+	Output power for a single channel with optimal gain, if the input power is sₖ (standard deviation) and the Lagrange multiplier is Λ.
+	"""
 	function output_power(sₖ, Λ)
 	    gain(sₖ, Λ)^2 * (1+sₖ^2) + 1
 	end
-	
-	function total_output_power(s_range, Λ)
-	    return sum(output_power.(s_range, Λ))
+
+	"""
+		total_output_power(s, Λ)
+
+	Compute the total output power ``Q=Q(\\Lambda)`` for the van Hateren system defined by a set of input channels with power `s`.
+
+	Arguments:
+
+	# Arguments
+	- `s`: the stimulus power for all input channels, encoded as an array of standard deviations: s=``\\{s_1, \\ldots, s_K\\}``.
+	- `Λ`: the Lagrange multiplier associated with ``Q``.
+	"""
+	function total_output_power(s, Λ)
+	    return sum(output_power.(s, Λ))
 	end
 end
 
 # ╔═╡ 6141a7c6-02a5-442b-807d-de05e47e6e85
 md"""
-### Interactive display
-In the plot below, we can look at the solution of the problem just described for a particular case where there are ``K=15`` channels. Each channel has a different input signal strength. However, all signal strengths can be scaled together with one parameter that we pass to the interactive plot. for instance, when this parameter is 1, the signal strengths of the 15 channels are regularly distributed in the interval ``[0.5, 2]``. More generally, for a certain value ``s`` of the signal strength parameter, they will be distributed in the interval ``[s/2, 2s]``. The idea is that in this way we can look at how channels with different signal strengths get processed differently according to the efficient coding prescription.
+### Interactive display of the solution as a function of ``\Lambda`` and {``s_k``}
+In the plot below, we can look at the solution of the problem just described for a particular case where there are ``K=15`` channels. Each channel has a different input signal strength. However, all signal strengths can be scaled together with one parameter that we pass to the interactive plot. For instance, when this parameter is 1, the signal strengths of the 15 channels are regularly distributed in the interval ``[0.5, 2]``. More generally, for a certain value ``s`` of the signal strength parameter, they will be distributed in the interval ``[s/2, 2s]``. The idea is that in this way we can look at how channels with different signal strengths get processed differently according to the efficient coding prescription. And just for clarity: this is a completely arbitrary choice I have made for illustrative purposes only! We will see below where the values of ``s_k`` can come from when applying this efficient coding theory to a concrete case.
 
-The other parameter we can manipulate in the interactive plot is the output budget ``Q``. We do so by setting the parameter ``\Lambda``. Since ``\Lambda`` is defined in such a way that ``\Lambda\rightarrow 0`` corresponds to a large output budget and ``\Lambda\rightarrow 1`` corresponds to a small output budget, the slider below actually controls ``1-\Lambda``. In this way, sliding it to the right increases the budget.
+The other parameter we can manipulate in the interactive plot is the output budget ``Q``. We do so by setting the parameter ``\Lambda``. Remember that ``\Lambda`` is defined in such a way that ``\Lambda\rightarrow 0`` corresponds to a large output budget and ``\Lambda\rightarrow 1`` corresponds to a small output budget. Therefore, sliding the control to the right decreases the budget and sliding the control to the left increases the budget. You can see the function ``Q=Q(\Lambda)`` plotted in the top right panel of the display.
 
-### What to pay attention to
+#### What to pay attention to
 By playing with the interactive plot, it should be possible to find **two different coding regimes**.
 1. When stimuli are strong enough and the main constraint is output noise/bandwidth limitation, weaker input signals should be amplified more than stronger ones: neural gain should decrease as signal variability (strength) increases.
 2. When the main limitation is noise corrupting the input (weak signals and large budget), weaker signals cannot be recovered by amplification, so neural gain should increase as signal variability (strength) increases.
@@ -111,9 +138,7 @@ By playing with the interactive plot, it should be possible to find **two differ
 
 # ╔═╡ 5edc3017-a0c4-433c-90f2-2d1d24c4bab7
 begin
-	function plot_gain_from_budget(budget, input_strength)
-
-	    Λ = 1 - budget
+	function plot_gain_from_budget(Λ, input_strength)
 		
 		l = @layout [a b; c]
 		
@@ -155,9 +180,9 @@ end
 
 # ╔═╡ b1eef15f-03e5-4e22-8851-1ddb8fb0e239
 md"""
-Output variance budget: $(@bind budget Slider(0.01:0.01:0.99, default=0.5, show_value=true))
+Output variance budget: ``Λ=``$(@bind budget Slider(0.01:0.01:0.99, default=0.5, show_value=true))
 
-Log signal strength: $(@bind log_input_strength Slider(-2:0.01:2, default=0, show_value=true))
+Log signal strength: ``\log(s)=``$(@bind log_input_strength Slider(-2:0.01:2, default=0, show_value=true))
 """
 
 # ╔═╡ 0376373b-4908-41cf-b7ce-0b377af11b89

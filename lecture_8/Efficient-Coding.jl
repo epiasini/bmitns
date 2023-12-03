@@ -16,7 +16,7 @@ end
 
 # ╔═╡ fa084448-889d-11ee-3172-c3c4348be3b0
 begin
-	using PlutoUI, Distributions, DataFrames, Downloads, CSV, Compose, Base, Plots, LaTeXStrings, LogExpFunctions, Roots, Optim, LinearAlgebra
+	using PlutoUI, Distributions, DataFrames, Downloads, CSV, Compose, Base, Plots, LaTeXStrings, LogExpFunctions, Roots, Optim, LinearAlgebra, Printf
 
 	TableOfContents()
 end
@@ -80,7 +80,7 @@ g_k = \frac{-(2+s_k^2)+\sqrt{s_k^4+4s_k^2/\Lambda}}{2(1+s_k^2)}
 \end{equation}
 ```
 
-if ``g_k`` thus defined is positive, otherwise ``g_k=0`` (i.e., we "kill" the channel). In this expression, ``\Lambda`` is a Lagrange multiplier that controls ``Q``, and we showed in class that necessarily ``0<\Lambda<1``.  To simplify the expression, we have also assumed that ``n_c=n_s=1``. In class also we showed that for a channel to have nonzero gain (``g_k>0``, that is, for that channel not to be "killed") the input signal strength must be above a critical threshold ``s_k > \sqrt{\Lambda/(1-\Lambda)}``.
+if ``g_k`` thus defined is positive, otherwise ``g_k=0`` (i.e., we "kill" the channel). In this expression, ``\Lambda`` is a Lagrange multiplier that controls ``Q``, and we showed in class that necessarily ``0<\Lambda<1``.  To simplify the expression, we have also assumed that ``n_c=n_s=1`` (we say that the "noise floor", the minimum amount of output variance of a channel, is 1). In class also we showed that for a channel to have nonzero gain (``g_k>0``, that is, for that channel not to be "killed") the input signal strength must be above a critical threshold ``s_k > \sqrt{\Lambda/(1-\Lambda)}``.
 
 What does it mean when we say that "``\Lambda`` is a Lagrange multiplier that controls ``Q``", in practice? Consider that ``Q`` always depends on the set of gain values ``\{g_k\}_i^K`` through the expression in Equation 1. But if ``g_k`` is given by Equation 2, where it is a function of ``\Lambda``, this means that ``Q`` depends on ``\Lambda`` through ``g_k``: we can write ``Q=Q(\{g_k(\Lambda)\})=Q(\Lambda)``. So for any value of ``\Lambda`` we have a solution ``g_k`` for each channel, and a corresponding value of the total output power ``Q``. This is an **implicit solution** of our problem (which, remember, was: *given a certain value of ``Q``, how should I pick ``g_k`` to maximise transmitted information?*). In practice, for a given (desired) value of the output power ``Q^*`` we can find ``g_k`` by changing the value of ``\Lambda`` until ``Q=Q(\Lambda)=Q^*`` (using Equation 1). We can call the value of ``\Lambda`` where this happens ``\Lambda^*``. The value of ``g_k`` is then given by ``g_k^*=g_k(\Lambda^*)``. You can see this process in action in the interactive demo below.
 
@@ -92,10 +92,14 @@ begin
 	"""
 		gain(sₖ, Λ)
 
-	Optimal gain for a channel, as a function of the input power sₖ (standard deviation) and the Lagrange multiplier Λ.
+	Optimal gain √gₖ for a channel, as a function of the input power sₖ (standard deviation) and the Lagrange multiplier Λ.
 	"""
 	function gain(sₖ, Λ)
-	    sqrt(max((-(2+sₖ^2) + sqrt(sₖ^4 + 4*sₖ^2/Λ))/(2*(1+sₖ^2)), 0))
+		if sₖ > √(Λ/(1-Λ))
+			return √((-(2+sₖ^2) + √(sₖ^4 + 4sₖ^2/Λ)) / (2(1+sₖ^2)))
+		else
+			return 0
+		end
 	end
 
 	"""
@@ -110,9 +114,7 @@ begin
 	"""
 		total_output_power(s, Λ)
 
-	Compute the total output power ``Q=Q(\\Lambda)`` for the van Hateren system defined by a set of input channels with power `s`.
-
-	Arguments:
+	Compute the total output power \\Q=Q(\\Lambda)\\ for the van Hateren system defined by a set of input channels with power `s`.
 
 	# Arguments
 	- `s`: the stimulus power for all input channels, encoded as an array of standard deviations: s=``\\{s_1, \\ldots, s_K\\}``.
@@ -130,17 +132,21 @@ In the plot below, we can look at the solution of the problem just described for
 
 The other parameter we can manipulate in the interactive plot is the output budget ``Q``. We do so by setting the parameter ``\Lambda``. Remember that ``\Lambda`` is defined in such a way that ``\Lambda\rightarrow 0`` corresponds to a large output budget and ``\Lambda\rightarrow 1`` corresponds to a small output budget. Therefore, sliding the control to the right decreases the budget and sliding the control to the left increases the budget. You can see the function ``Q=Q(\Lambda)`` plotted in the top right panel of the display.
 
+The plots has three panels:
+- top left, the total output power ``Q`` as a function of the Lagrange multiplier ``\Lambda``, ``Q=Q(\Lambda)``.
+- top right, the gain ``\\sqrt{g_k}`` as a function of the 
+
 #### What to pay attention to
 By playing with the interactive plot, it should be possible to find **two different coding regimes**.
-1. When stimuli are strong enough and the main constraint is output noise/bandwidth limitation, weaker input signals should be amplified more than stronger ones: neural gain should decrease as signal variability (strength) increases.
-2. When the main limitation is noise corrupting the input (weak signals and large budget), weaker signals cannot be recovered by amplification, so neural gain should increase as signal variability (strength) increases.
+- **``\Lambda\rightarrow 1^-, s_k\gg 1``, Transmission limited regime:** When stimuli are strong enough and the main constraint is output noise/bandwidth limitation, weaker input signals should be amplified more than stronger ones: neural gain should decrease as signal variability (strength) increases.
+- **``\Lambda\rightarrow 0^+, s_k\rightarrow 0``, Sampling limited regime:** When the main limitation is noise corrupting the input (weak signals and large budget), weaker signals cannot be recovered by amplification, so neural gain should increase as signal variability (strength) increases.
 """
 
 # ╔═╡ 5edc3017-a0c4-433c-90f2-2d1d24c4bab7
 begin
 	function plot_gain_from_budget(Λ, input_strength)
 		
-		l = @layout [a b; c]
+		l = @layout [a b; c d]
 		
 	    n_channels = 15
 	    input_std_min = input_strength*0.5
@@ -153,53 +159,78 @@ begin
 	    scatter!([Λ], [total_output_power(s,Λ)], color=:red, legend=false)
 		vline!([Λ], color=:red)
 	    hline!([total_output_power(s,Λ)], color=:red)
-	    xlabel!("Λ")
-	    ylabel!("Total output variance")
-	    title!("Output variance 'budget'")
+	    xlabel!("Lagrange multiplier \$\\Lambda\$")
+	    ylabel!("Total output variance \$Q\$")
+	    title!("Output variance \"budget\" \$Q(\\Lambda)\$")
 
 	    p2 = plot(s, gain.(s, Λ_range[1]), color=:gray, linewidth=0.2, legend=false)
 	    for l in Λ_range[2:end]
 	        plot!(s, gain.(s, l), color=:gray, linewidth=0.2, legend=false)
 		end
 	    plot!(s, gain.(s, Λ), color=:red)
-	    title!("Transfer function")
+	    title!("Neural gain")
 	    xlabel!(L"Input strength for a given channel, $s_k$")
 	    ylabel!(L"Channel gain, $g_k$")
+
+		p3 = plot(s, s.*gain.(s, Λ_range[1]), color=:gray, linewidth=0.2, legend=false)
+	    for l in Λ_range[2:end]
+	        plot!(s, s.*gain.(s, l), color=:gray, linewidth=0.2, legend=false)
+		end
+	    plot!(s, s.*gain.(s, Λ), color=:red)
+	    title!("Transfer function")
+	    xlabel!("Input strength for a given channel, \$s_k\$")
+	    ylabel!("Output strength \$g_k s_k\$")
 	    
-	    p3 = bar((1:length(s)).+0.2, s, bar_width=0.4, label="Input signal strength")
+	    p4 = bar((1:length(s)).+0.2, s, bar_width=0.4, label="Input signal strength")
 	    bar!((1:length(s)).-0.2, sqrt.(output_power.(s, Λ)), bar_width=0.4, label="Output dynamic range")
 	    hline!([1], label="Noise floor", linewidth=2)
 	    xticks!(([0, 7, 14], ["1", "8", "15"]))
 	    xlabel!("Channel")
 	    ylabel!("Dynamic range")
 
-		plot(p1, p2, p3, layout=l, size=(800,600))
+		plot(p1, p2, p3, p4, layout=l, size=(800,600))
 		
 	end
 end
 
 # ╔═╡ b1eef15f-03e5-4e22-8851-1ddb8fb0e239
 md"""
-Output variance budget: ``Λ=``$(@bind budget Slider(0.01:0.01:0.99, default=0.5, show_value=true))
+Lagrange multiplier controlling the output variance budget: ``Λ=``$(@bind budget Slider(0.01:0.01:0.99, default=0.5, show_value=true))
 
-Log signal strength: ``\log(s)=``$(@bind log_input_strength Slider(-2:0.01:2, default=0, show_value=true))
+log signal strength (global level): ``\log_{10}(s)=``$(@bind log_input_strength Slider(-2:0.01:2, default=0, show_value=true))
 """
 
 # ╔═╡ 0376373b-4908-41cf-b7ce-0b377af11b89
 md"""
-Output budget is $budget and signal strength is $(10^(log_input_strength))
+The global signal strength is ``s=`` $(@sprintf("%.2f", 10^(log_input_strength))). Remember that the actual signal strength values ``s_k`` are 15 numbers distributed in regular intervals between ``s/2`` and ``2s``.
 """
 
 # ╔═╡ bec54691-1db8-4149-8b3c-0f6768a8e6a4
 plot_gain_from_budget(budget, 10^(log_input_strength))
 
+# ╔═╡ 76c171fb-9253-4d37-90a6-b6d756d6530d
+md"""
+## A few pointers to classic work addressing the transmission-limited regime
+
+The transmission-limited regime is the one that has historically received the most attention, as it links to/generalizes simpler notions of efficient coding as redundancy reduction (for instance that explored in [Laughlin's 1981 paper](https://doi.org/10.1515/znc-1981-9-1040), which we saw in class) which apply particularly well in the sensory periphery.
+
+For instance, the phenomenon of **contrast gain control** can be conceptualized elegantly with an efficient coding approach. Sensory neurons are ofen observed to modulate the steepness of their response function, or "gain", as a function of the constrast (variability) of their input. In other words, in sensory contexts where the sensory features relevant for the neuron vary over a very broad range the neuron's transfer function becomes less steep, so that the (broad) input range can still all be mapped to the (fixed) dynamic range of the neuron. Conversely, when the input varies only over a very narrow range, the neuron's gain increases, again resulting in the (now, narrow) input range being mapped to the full dynamic range.
+
+A couple of nice papers that address this topic experimentally in a way that can be mapped to the discussion above are [Chander and Chichilnisky 2001](https://doi.org/10.1523/JNEUROSCI.21-24-09904.2001) in retina and [Rabinowitz et al 2011](http://dx.doi.org/10.1016/j.neuron.2011.04.030) in auditory cortex.
+
+In the following, however, we will focus on a series of studies that explored the relevance of the sampling limited regime in sensory cortex.
+"""
+
 # ╔═╡ 3da433c1-9d02-48e2-9da5-b1adb3d6f504
 md"""
 ## Analysis of Caramellino et al 2021
-### Task description
-We will now look at an experiment designed to test the predictions of the efficient coding framework we described above, at the level of central visual processing. 
+### Introduction
 
-Here's a figure from [Hermundstad et al, eLife 2014](https://doi.org/10.7554/eLife.03722) that explains the general idea.
+This paper studies the perception of *visual textures*. Intuitively, you can think of a visual texture as of the collection semi-structured visual patterns or motifs that characterize the surface of objects; importantly, although textures could be composed by smaller discrete elements discernible at a close inspection, the texture is always made up by a large number of such elements. Some examples are "foliage", or "wood grain", or "grass", or "gravel" . Here are a couple of examples of visual textures, just to make the idea more concrete (from [Portilla and Simoncelli 2000](https://doi.org/10.1023/A:1026553619983)):
+
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Portilla2000_examples.jpg", :width => 600))
+
+Here's a figure from [Hermundstad et al, eLife 2014](https://doi.org/10.7554/eLife.03722) that explains the general idea. 
 
 $(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Hermundstad2014_fig_1.png", :width => 800))
 
@@ -320,7 +351,7 @@ Texture processing is believed to happen mostly in intermediate visual cortical 
 # ╔═╡ 0355c0dd-7151-4de1-b37b-dc981f0940fa
 md"""
 ### Download and preprocess data
-Now we're going to download the data published with the Caramellino pape, and to perform some preprocessing to rearrange it in a format that will be useful for us.
+Now we're going to download the data published with the Caramellino paper, and to perform some preprocessing to rearrange it in a format that will be useful for us.
 """
 
 # ╔═╡ 7e4759f7-5507-4a15-9255-fd305ec9a1b3
@@ -692,6 +723,7 @@ LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 
 [compat]
@@ -713,7 +745,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "e47a96ba553893b7047d32ba4b917a21dcd40a98"
+project_hash = "3e0ba432a774033852041532988d3ee3f90d702e"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -2183,11 +2215,12 @@ version = "1.4.1+1"
 # ╟─fa084448-889d-11ee-3172-c3c4348be3b0
 # ╟─3c9e3ee3-3398-4792-ba27-ea0636627faa
 # ╠═7152e1e9-f83d-4600-8245-e09dca2efec4
-# ╟─6141a7c6-02a5-442b-807d-de05e47e6e85
+# ╠═6141a7c6-02a5-442b-807d-de05e47e6e85
 # ╟─5edc3017-a0c4-433c-90f2-2d1d24c4bab7
 # ╟─b1eef15f-03e5-4e22-8851-1ddb8fb0e239
 # ╟─0376373b-4908-41cf-b7ce-0b377af11b89
 # ╟─bec54691-1db8-4149-8b3c-0f6768a8e6a4
+# ╟─76c171fb-9253-4d37-90a6-b6d756d6530d
 # ╟─3da433c1-9d02-48e2-9da5-b1adb3d6f504
 # ╟─f842c227-f4e4-4a8a-95b3-c9a161c5c5b7
 # ╟─e2063dee-b706-4147-aff8-a8575d7f97c2

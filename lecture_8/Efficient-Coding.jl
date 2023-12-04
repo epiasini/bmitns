@@ -182,7 +182,7 @@ n_channels = 15
 	    plot!(s, s.*gain.(s, Λ), color=:red)
 	    title!("Transfer function")
 	    xlabel!("Input strength for a given channel, \$s_k\$")
-	    ylabel!("Output strength \$g_k s_k\$")
+	    ylabel!("Output strength \$s_k\\sqrt{g_k}\$")
 	    
 	    p4 = bar((1:length(s)).+0.2, s, bar_width=0.4, label="Input signal strength")
 	    bar!((1:length(s)).-0.2, sqrt.(output_power.(s, Λ)), bar_width=0.4, label="Output dynamic range")

@@ -151,7 +151,7 @@ begin
 		l = @layout [a b; c d]
 		
 	    
-n_channels = 15
+		n_channels = 15
 	    input_std_min = input_strength*0.5
 	    input_std_max = input_strength*2
 	    s = LinRange(input_std_min,input_std_max,n_channels)    
@@ -184,8 +184,8 @@ n_channels = 15
 	    xlabel!("Input strength for a given channel, \$s_k\$")
 	    ylabel!("Output strength \$s_k\\sqrt{g_k}\$")
 	    
-	    p4 = bar((1:length(s)).+0.2, s, bar_width=0.4, label="Input signal strength")
-	    bar!((1:length(s)).-0.2, sqrt.(output_power.(s, Λ)), bar_width=0.4, label="Output dynamic range")
+	    p4 = bar((0:length(s)-1).+0.2, s, bar_width=0.4, label="Input signal strength")
+	    bar!((0:length(s)-1).-0.2, sqrt.(output_power.(s, Λ)), bar_width=0.4, label="Output dynamic range")
 	    hline!([1], label="Noise floor", linewidth=2)
 	    xticks!(([0, 7, 14], ["1", "8", "15"]))
 	    xlabel!("Channel")
@@ -229,7 +229,7 @@ md"""
 ## Analysis of Caramellino et al 2021
 ### Introduction
 
-We will now discuss the work of [Caramellino et al 2021](10.7554/eLife.72081), which is part of a larger body of research including [Victor and Conte 2012](https://doi.org/10.1364/JOSAA.29.001313), [Hermundstad et al 2014](https://doi.org10.7554/eLife.03722), and [Tesileanu et al 2020](https://doi.org/10.7554/eLife.54347).
+We will now discuss the work of [Caramellino et al 2021](https://doi.org/10.7554/eLife.72081), which is part of a larger body of research including [Victor and Conte 2012](https://doi.org/10.1364/JOSAA.29.001313), [Hermundstad et al 2014](https://doi.org10.7554/eLife.03722), and [Tesileanu et al 2020](https://doi.org/10.7554/eLife.54347).
 
 This paper studies the perception of *visual textures*. Intuitively, you can think of a visual texture as of the collection semi-structured visual patterns or motifs that characterize the surface of objects. Importantly, although textures could be composed by smaller discrete elements discernible at a close inspection, the texture is always made up by a large number of such elements. Some examples are "foliage", or "wood grain", or "grass", or "gravel" . Here are a couple of examples of visual textures, just to make the idea more concrete (from [Portilla and Simoncelli 2000](https://doi.org/10.1023/A:1026553619983)):
 
@@ -355,7 +355,7 @@ sample_texture(statistic, level, 100)
 
 # ╔═╡ dfea496b-f89b-4845-8df5-fc11504499e3
 md"""
-The figure below is taken from [Caramellino et al, eLife 2021](https://doi.org/10.7554/eLife.72081) and explains the task in rats. This is a 2-alternative forced-choice (2AFC) task. On each trial, the rat sees two images, one on the left and one on the right. One of the two images is just a random sample of white noise, that is, black and white pixels fully at random. The other image is a sample from a maximum-entropy texture with a given intensity of a certain correlation (like the images you can generate above). The task of the rat is to report on which side is the "structured" visual input. Conceptually, this allows to measure the sensitivity of the rat to different pixel statistics/texture patterns by seeing how far away, along different axes, the structured stimulus needs to be from the origin of the space (white noise) to be distinguishable from it.
+The figure below is taken from [Caramellino et al, eLife 2021](https://doi.org/10.7554/eLife.72081) and explains the task in rats. This is a binary classification task (yes/no task). On each trial, the rat sees one image, which could be either a random sample of white noise (black and white pixels fully at random) or a sample from a maximum-entropy texture with a given intensity of a certain correlation (like the images you can generate above). The task of the rat is to report whether the image was fully random (white noise) or structured (texture). Conceptually, this allows to measure the sensitivity of the rat to different pixel statistics/texture patterns by seeing how far away, along different axes, the structured stimulus needs to be from the origin of the space (white noise) to be distinguishable from it.
 
 $(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Caramellino2021_fig_1.png", :width => 800))
 
@@ -730,6 +730,8 @@ begin
 	plot(images', markershape=:circle, label="image std. dev.")
 	plot!(human', markershape=:square, label="human sensitivity")
 	plot!(rat, markershape=:diamond, label="rat sensitivity")
+
+	xticks!([1, 2, 3], ["\\beta (2-point)", "\\theta (3-point)", "\\alpha (4-point)"])
 
 end
 
@@ -2247,7 +2249,7 @@ version = "1.4.1+1"
 # ╟─3c9e3ee3-3398-4792-ba27-ea0636627faa
 # ╠═7152e1e9-f83d-4600-8245-e09dca2efec4
 # ╟─6141a7c6-02a5-442b-807d-de05e47e6e85
-# ╟─5edc3017-a0c4-433c-90f2-2d1d24c4bab7
+# ╠═5edc3017-a0c4-433c-90f2-2d1d24c4bab7
 # ╟─b1eef15f-03e5-4e22-8851-1ddb8fb0e239
 # ╟─0376373b-4908-41cf-b7ce-0b377af11b89
 # ╟─bec54691-1db8-4149-8b3c-0f6768a8e6a4

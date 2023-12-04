@@ -23,7 +23,7 @@ end
 
 # ╔═╡ 3c9e3ee3-3398-4792-ba27-ea0636627faa
 md"""
-# Efficient coding
+# Van Hateren's regimes of efficient coding
 
 In this notebook we illustrate some of the results in [Van Hateren, Biological Cybernetics 1992](https://www.doi.org/10.1007/BF00203134), and we show step-by-step how the data collected in  [Caramellino et al, eLife 2021](https://doi.org/10.7554/eLife.72081) can be nicely interpreted using this theory. This exercise is meant to bring together the Bayesian approach to modeling perception we developed in the first part of the course and the notions based on information theory (efficient coding) we developed in the second part.
 
@@ -148,7 +148,8 @@ begin
 		
 		l = @layout [a b; c d]
 		
-	    n_channels = 15
+	    
+n_channels = 15
 	    input_std_min = input_strength*0.5
 	    input_std_max = input_strength*2
 	    s = LinRange(input_std_min,input_std_max,n_channels)    
@@ -226,11 +227,19 @@ md"""
 ## Analysis of Caramellino et al 2021
 ### Introduction
 
-This paper studies the perception of *visual textures*. Intuitively, you can think of a visual texture as of the collection semi-structured visual patterns or motifs that characterize the surface of objects; importantly, although textures could be composed by smaller discrete elements discernible at a close inspection, the texture is always made up by a large number of such elements. Some examples are "foliage", or "wood grain", or "grass", or "gravel" . Here are a couple of examples of visual textures, just to make the idea more concrete (from [Portilla and Simoncelli 2000](https://doi.org/10.1023/A:1026553619983)):
+We will now discuss the work of [Caramellino et al 2021](10.7554/eLife.72081), which is part of a larger body of research including [Victor and Conte 2012](https://doi.org/10.1364/JOSAA.29.001313), [Hermundstad et al 2014](https://doi.org10.7554/eLife.03722), and [Tesileanu et al 2020](https://doi.org/10.7554/eLife.54347).
 
-$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Portilla2000_examples.jpg", :width => 600))
+This paper studies the perception of *visual textures*. Intuitively, you can think of a visual texture as of the collection semi-structured visual patterns or motifs that characterize the surface of objects. Importantly, although textures could be composed by smaller discrete elements discernible at a close inspection, the texture is always made up by a large number of such elements. Some examples are "foliage", or "wood grain", or "grass", or "gravel" . Here are a couple of examples of visual textures, just to make the idea more concrete (from [Portilla and Simoncelli 2000](https://doi.org/10.1023/A:1026553619983)):
 
-Here's a figure from [Hermundstad et al, eLife 2014](https://doi.org/10.7554/eLife.03722) that explains the general idea. 
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Portilla2000_examples.jpg", :width => 400))
+
+For the purpose of this study, we will only consider visual features that correspond to correlations between neighboring pixels of an image. The idea that relatively simple correlation patterns are important for texture perception goes back to [Julesz 1962](https://doi.org/10.1109/TIT.1962.1057698). Moreover, we will only work with "binary" black and white images composed only of black or white pixels.
+
+Texture processing is believed to happen mostly in intermediate visual cortical areas. In this situation, and in reference to the theoretical ideas discussed above, the "transmission budget" for the output is assumed to be high due to the dense connectivity within and across cortical circuits (compare to the retina, where the optic nerve forms a bottleneck for information transmission to cortex). At the same time, textures are here assumed to be represented by multi-point pixel correlations, and it may be hard to obtain an accurate estimate of these high-order statistics from an image patch. Therefore, we are in the **sampling limited** regime in the discussion above --- the regime where we have high budget but weak signal. In this regime, efficient coding predicts that visual cortex should be more more sensitive to correlation patterns that have larger variability across natural scenes, and less sensitive to less variable patterns. **We will test this prediction at the behavioral level, asking whether rats show higher visual sensitivity to artificial textures that contain patterns that are more variable in natural images, and vice versa.**
+
+### Task description
+
+Here's a figure from [Hermundstad et al, eLife 2014](https://doi.org/10.7554/eLife.03722) that explains how **pixel correlations (and, importantly, their variability from image patch to image patch)** are measured from a database of natural images.
 
 $(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Hermundstad2014_fig_1.png", :width => 800))
 
@@ -328,7 +337,11 @@ end
 
 # ╔═╡ e2063dee-b706-4147-aff8-a8575d7f97c2
 md"""
-In this study, our visual stimuli will be maximum-entropy visual textures, as defined by [Victor and Conte, J Opt Soc Am 2012](https://doi.org/10.1364/JOSAA.29.001313). In the (hidden) function above I have implemented the algorithm for texture generation described in that paper. To get a sense for how these textures look like, you can play with the generator below. 
+In this study, the visual stimuli will be synthetic visual textures that have a certain degree of two-point, three-point, or four-point correlations, and that contain the minimum amount of statistical structure given that constraint. The idea is that we want to estimate rat sensitivity to specific pixel correlation patterns, so to reduce confounds to the minimum we will work with visual stimuli that in some sense "contain only" those correlation patterns. 
+
+Such textures can be mathematically defined as **maximum-entropy textures** where we maximise the entropy of the texture seen as a random variable, subject to a constraint on the value of the desired correlation. This mathematical construction, due to [Victor and Conte, J Opt Soc Am 2012](https://doi.org/10.1364/JOSAA.29.001313), allows us to define a 10-dimensional **"texture space"** where each axis corresponds to a different correlation pattern. Each of these axes has a name, denoted by a greek letter and (optionally) a symbol. You can find the description of each of the coordinate axes in the figure reproduced above from Hermundstad 2014. Note that the origin of this texture space (that is, the point where each of the coordinates is 0) corresponds to the case of a so-called **"white noise"** texture, which is the trivial texture where each pixel is sampled independently as black or white with 50/50 probability.
+
+The (hidden) function above implements Victor and Conte's algorithm for synthetic texture generation. To get a sense for how these textures look like, you can play with the generator below. 
 
 Statistic to be sampled ("axis" in texture space): $(@bind statistic Select(["γ", "β—", "β|", "β∖", "β∕", "θ◿", "θ◸", "θ◹", "θ◺", "α"]))
 
@@ -340,18 +353,18 @@ sample_texture(statistic, level, 100)
 
 # ╔═╡ dfea496b-f89b-4845-8df5-fc11504499e3
 md"""
-The figure below is taken from [Caramellino et al, eLife 2021](https://doi.org/10.7554/eLife.72081) and explains the task in rats.
+The figure below is taken from [Caramellino et al, eLife 2021](https://doi.org/10.7554/eLife.72081) and explains the task in rats. This is a 2-alternative forced-choice (2AFC) task. On each trial, the rat sees two images, one on the left and one on the right. One of the two images is just a random sample of white noise, that is, black and white pixels fully at random. The other image is a sample from a maximum-entropy texture with a given intensity of a certain correlation (like the images you can generate above). The task of the rat is to report on which side is the "structured" visual input. Conceptually, this allows to measure the sensitivity of the rat to different pixel statistics/texture patterns by seeing how far away, along different axes, the structured stimulus needs to be from the origin of the space (white noise) to be distinguishable from it.
 
 $(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Caramellino2021_fig_1.png", :width => 800))
 
-### The prediction we are going to test:
-Texture processing is believed to happen mostly in intermediate visual cortical areas. In this situation, the "transmission budget" for the output is assumed to be pretty high due to the dense connectivity within and across cortical circuits (compare to the retina, where the optic nerve forms a bottleneck for information transmission to cortex). At the same time, textures are here assumed to be represented by multi-point pixel correlations, and it may be hard to obtain an accurate estimate of these high-order statistics from an image patch. Therefore, we are in regime number 2 in the discussion above --- the one where we have high budget but weak signal. In this regime, efficient coding predicts that visual cortex should be more more sensitive to correlation patterns that have larger variability across natural scenes, and less sensitive to less variable patterns. We will test this prediction at the behavioral level, asking whether rats show higher visual sensitivity to artificial textures that contain patterns that are more variable in natural images, and vice versa.
 """
 
 # ╔═╡ 0355c0dd-7151-4de1-b37b-dc981f0940fa
 md"""
-### Download and preprocess data
-Now we're going to download the data published with the Caramellino paper, and to perform some preprocessing to rearrange it in a format that will be useful for us.
+### Getting the data
+Now that we have described the experiment, let's start by taking a look at the data. We're going to download the data published with the Caramellino paper, and to perform some preprocessing to rearrange it in a format that will be useful for us. The data is freely available [here](https://zenodo.org/doi/10.5281/zenodo.4762567), and the cell below will download it for us. Again here (as in other similar passages below) we are hiding the code by default but you can inspect it if you wish by downloading the notebook and opening it in Pluto.
+
+The data is summarized in the table below, which identifies the rats (there are two "batches" of rats in the experiment, and within each batch the rats are identified by a rat ID), the name of the statistic that the rat was trained and tested on (gamma, beta, theta, alpha), the intensity ``s`` of the statistic (a number between 0 and 1, with 0 representing white noise and 1 representing the maximum value that that correlation can take), the number of trials ``T_s`` done on that rat at that intensity of that statistic, and the number of trials ``N_s`` where the rat reported "noise". 
 """
 
 # ╔═╡ 7e4759f7-5507-4a15-9255-fd305ec9a1b3
@@ -375,18 +388,19 @@ begin
 
 	filter!(:statistic_intensity => ∈(possible_stimuli), data)
 	filter!(:experiment_phase => ==(3), data)
+	rename!(data, Dict("learned_statistic"=>"statistic"))
 
-	data_gdf = groupby(data, ["rat_batch", "rat_ID", "learned_statistic", "statistic_intensity"], sort=false)
+	data_gdf = groupby(data, ["rat_batch", "rat_ID", "statistic", "statistic_intensity"], sort=false)
 
 	data = combine(data_gdf, :report_noise => (x -> [length(x) sum(x)]) => [:Ts, :Ns])
-	grouped_data = groupby(data, (["rat_batch", "rat_ID", "learned_statistic"]), sort=false)
+	grouped_data = groupby(data, (["rat_batch", "rat_ID", "statistic"]), sort=false)
 
 	data
 end
 
 # ╔═╡ b32c0b97-4af8-402e-972d-0f6d5445ef7e
 md"""
-To interpret this data, we are going to simplify a bit the approach taken in Caramellino et al 2021, while keeping its essential components. Some of the text below is adapted from that paper.
+To interpret this data, we are going to build a Bayesian model of the perceptual process of the rat. We will simplify a bit the approach taken in Caramellino et al 2021, while keeping the essential components. Some of the text below is adapted from the paper.
 
 ### Step 1 - generative model
 On any given trial, the nominal (true) value of the statistic is some value ``s``. The rats have to report whether the texture is white noise (``s=0``) or not. Note that in the experiment design only the positive axis of the texture space was used, so the two alternatives in practice are ``s=0`` and ``0<s<1``.
@@ -395,7 +409,7 @@ Because the texture has finite size, the empirical value of the statistic in the
 ```math
 p(x|s) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left[-\frac{(x-s)^2}{2\sigma^2}\right]
 ```
-Nnote that this means that when ``s=1`` the actual percept will be some ``x>1`` about half of the time. This doesn't really make sense given how the statistic is defined (because ``-1\leq s \leq 1`` by construction), but we will ignore this fact here for the sake of simplicity.
+Note that this means that when ``s=1`` the actual percept will be some ``x>1`` about half of the time. This doesn't really make sense given how the statistic is defined (because ``-1\leq s \leq 1`` by construction), but we will ignore this fact here for the sake of simplicity.
 
 We will assume that each rat has some unknown prior over the alternatives (``s=0``, ``s>0``). We will parameterize the prior with the log odds:
 ```math
@@ -428,6 +442,7 @@ get
 ```
 which we can rewrite
 ```math
+\tag{3}
     D(x)= a + \ln K -\frac{x^2}{2\sigma^2} -\ln\left[\sum_k\exp\left[-\frac{(x-s_k)^2}{2\sigma^2}\right]\right]
 ```
 
@@ -451,6 +466,10 @@ the response distribution is, as usual, a cumulative Gaussian:
 ```math
 p(\text{report noise}|s) = \int_{-\infty}^{x^*}\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left[-\frac{(x-s)^2}{2\sigma^2}\right]\mathrm{d}x = 1-\Phi\left[{\frac{s-x^{*}}{\sigma}}\right]
 ```
+
+Importantly, note that unlike in the previous lectures of the course **we do not have a closed-form expression for ``x^*`` as a function of ``a`` and ``\sigma``**. However, given any values for ``a`` and ``\sigma`` we can plug them into Equation 3 and solve that equation for ``D(x)=0`` numerically. You can see this at play in the left panel of the plot below: the blue line is ``D(x)`` for the given values of ``a`` and ``\sigma``, and the horizontal red line is where ``D=0``. Finding the value of ``x^*`` numerically, essentially, means plotting the blue curve and seeing for what value of ``x`` it intersects the horizontal red line.
+
+Note also that it is possible to find a combination of ``a`` and ``\sigma`` for which ``D(x)=0`` has no solution! Does this make sense?
 """
 
 # ╔═╡ d9ae60c9-0fd8-4c7b-a2d3-4fd737b507fc
@@ -569,6 +588,8 @@ end
 # ╔═╡ 24920b7f-4022-4607-8460-f7d37dfb54b4
 md"""
 #### Step 4.2 - actually performing the fit
+
+Now we actually fit the model to each rat. The result is summarized in the table below, which gives the estimated values of ``a`` and ``\sigma`` for each rat (note that in this data each rat was tested only on one statistic, so it's possible to keep track of which rats were "gamma rats", "beta rats", etc).
 """
 
 # ╔═╡ 02999c65-c4bc-4923-bd46-956dfe6aa90b
@@ -590,19 +611,21 @@ end
 # ╔═╡ 87cb2f98-14df-493c-bef9-154f622553ef
 md"""
 #### Visualize fit results
+
+We can plot each rat's data in detail, together with its fitted model, to show that the model actually captures quite well the behavior of the animals.
 """
 
 # ╔═╡ b9cc4989-4915-4c93-8d01-2172f6e5710a
 function plot_rat_fit(rat_abs_number)
 	function rat_filter(batch, ID, statistic)
 		batch==fits[rat_abs_number,"rat_batch"] && ID==fits[rat_abs_number,"rat_ID"] &&
-		statistic==fits[rat_abs_number,"learned_statistic"]
+		statistic==fits[rat_abs_number,"statistic"]
 	end
-	rat_data = filter([:rat_batch, :rat_ID, :learned_statistic] =>rat_filter, data)
+	rat_data = filter([:rat_batch, :rat_ID, :statistic] =>rat_filter, data)
 
 	plot_response_distribution(fits[rat_abs_number,"a"], fits[rat_abs_number,"σ"])
 	plot!(rat_data.statistic_intensity, rat_data.Ns./rat_data.Ts, seriestype=:scatter)
-	annotate!((0.98, 0.95, Plots.text("Batch: $(fits[rat_abs_number,"rat_batch"]), rat: $(fits[rat_abs_number,"rat_ID"]), statistic: $(fits[rat_abs_number,"learned_statistic"])\na=$(round(fits[rat_abs_number,"a"],digits=2)), σ=$(round(fits[rat_abs_number,"σ"],digits=2))", :right)))
+	annotate!((0.98, 0.95, Plots.text("Batch: $(fits[rat_abs_number,"rat_batch"]), rat: $(fits[rat_abs_number,"rat_ID"]), statistic: $(fits[rat_abs_number,"statistic"])\na=$(round(fits[rat_abs_number,"a"],digits=2)), σ=$(round(fits[rat_abs_number,"σ"],digits=2))", :right)))
 	
 end
 
@@ -616,7 +639,7 @@ plot_rat_fit(rat_abs_number)
 
 # ╔═╡ d82a1862-fb10-4c39-94f6-950589299e5c
 md"""
-We can also look at the fits all at the same time.
+We can also look at the fits all at the same time (we don't plot the data here as it would be too messy).
 """
 
 # ╔═╡ 71e38447-bff0-49a2-a03a-b800fca7049d
@@ -628,7 +651,7 @@ begin
 	s_range = LinRange(0,1,50)
 
 	for statistic in ["gamma", "beta", "theta", "alpha"]
-		this_stat_rats = filter(:learned_statistic => ==(statistic), fits)
+		this_stat_rats = filter(:statistic => ==(statistic), fits)
 		p = plot()
 		for row in eachrow(this_stat_rats)
 			rat_batch, rat_ID, statistic, a, σ = Vector(row)
@@ -664,7 +687,7 @@ begin
 
 	plot([0], [1])
 	for (k, statistic) in enumerate(["gamma", "beta", "theta", "alpha"])
-		this_stat_rats = filter(:learned_statistic => ==(statistic), fits)
+		this_stat_rats = filter(:statistic => ==(statistic), fits)
 		plot!(k .+ 0.3*(rand(nrow(this_stat_rats)).-0.5), this_stat_rats[:,"sensitivity"], seriestype=:scatter, legend=false)
 	end
 	xlabel!("Statistic")
@@ -675,6 +698,8 @@ end
 # ╔═╡ 6fb30817-fb0e-4cb5-abe4-a4ba83e109ff
 md"""
 ### Conclusion - comparing the fits with the predictions from the theory
+
+To conclude, we can finally test our efficient coding hypothesis --- that rats should be more sensitive to patterns that are more variable in natural images. So we can plot on the same axis the sensitivities we just computed and the standard deviations of the distribution of the statistic intensities in natural images (after an appropriate normalization). While we are at it, we also include the data on **human** (not rat) sensitivity obtained with an analogous experiment by Hermundstad et al 2014.
 
 $(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Hermundstad2014_fig_3A.png", :width => 600))
 """
@@ -689,7 +714,7 @@ begin
 	images = [3.79 1.13 1.44]
 	
 	# compute average sensitivities for rats
-	rat = combine(groupby(fits, :learned_statistic), :sensitivity => mean).sensitivity_mean
+	rat = combine(groupby(fits, :statistic), :sensitivity => mean).sensitivity_mean
 	# discard sensitivity to gamma as that was not examined in humans
 	rat = rat[2:end]
 	
@@ -706,6 +731,8 @@ end
 
 # ╔═╡ 42c70357-9178-46e5-bd0c-8a9bedba7b7f
 md"""
+We can see that the prediction of the theory seems to hold quite well. Moreover, the same prediction explains well this aspect of perception in both humans and rats. This is particularly pleasant, because it's what you'd expect for two species that share common machinery for processing mid-level visual features, and/or have evolved in similar visual environments.
+
 (🎉🎉🎉🎉🎉)
 """
 
@@ -2215,7 +2242,7 @@ version = "1.4.1+1"
 # ╟─fa084448-889d-11ee-3172-c3c4348be3b0
 # ╟─3c9e3ee3-3398-4792-ba27-ea0636627faa
 # ╠═7152e1e9-f83d-4600-8245-e09dca2efec4
-# ╠═6141a7c6-02a5-442b-807d-de05e47e6e85
+# ╟─6141a7c6-02a5-442b-807d-de05e47e6e85
 # ╟─5edc3017-a0c4-433c-90f2-2d1d24c4bab7
 # ╟─b1eef15f-03e5-4e22-8851-1ddb8fb0e239
 # ╟─0376373b-4908-41cf-b7ce-0b377af11b89
@@ -2229,13 +2256,13 @@ version = "1.4.1+1"
 # ╟─0355c0dd-7151-4de1-b37b-dc981f0940fa
 # ╟─7e4759f7-5507-4a15-9255-fd305ec9a1b3
 # ╟─b32c0b97-4af8-402e-972d-0f6d5445ef7e
-# ╠═d9ae60c9-0fd8-4c7b-a2d3-4fd737b507fc
+# ╟─d9ae60c9-0fd8-4c7b-a2d3-4fd737b507fc
 # ╟─dd829eb7-23a1-4b27-b9cf-82cfbf64226d
 # ╟─83e037e2-582b-4a20-992f-dc9fec9106d9
 # ╟─d5134a14-67e7-483d-961d-e9f0b7be30a9
 # ╠═a4c03618-0ee9-419d-869d-3dd823c0ccf2
 # ╟─24920b7f-4022-4607-8460-f7d37dfb54b4
-# ╠═02999c65-c4bc-4923-bd46-956dfe6aa90b
+# ╟─02999c65-c4bc-4923-bd46-956dfe6aa90b
 # ╟─87cb2f98-14df-493c-bef9-154f622553ef
 # ╟─b9cc4989-4915-4c93-8d01-2172f6e5710a
 # ╟─f7e03313-4d88-4532-aafa-af8ab54c2fa6

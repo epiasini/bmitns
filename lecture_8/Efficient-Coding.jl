@@ -566,12 +566,14 @@ likelihoods for the individual values of ``N_s``
 ```
 Which we can rewrite
 ```math
-LL = \sum_{s}\left[\ln\binom{T_s}{N_s} + N_s\ln p(\text{rep
+\begin{align*}
+LL &= \sum_{s}\left[\ln\binom{T_s}{N_s} + N_s\ln p(\text{rep
     noise}|s,a,\sigma) + (T_s-N_s) \ln\left(1-p(\text{rep
     noise}|s,a,\sigma)\right)\right]\\
-    = \sum_{s}\left[N_s\ln p(\text{rep
+    &= \sum_{s}\left[N_s\ln p(\text{rep
     noise}|s,a,\sigma) + (T_s-N_s) \ln\left(1-p(\text{rep
     noise}|s,a,\sigma)\right)\right] + C
+\end{align*}
 ```
 where ``C`` is a constant that does not depend on ``a`` and ``\sigma``.
 

@@ -132,9 +132,11 @@ In the plot below, we can look at the solution of the problem just described for
 
 The other parameter we can manipulate in the interactive plot is the output budget ``Q``. We do so by setting the parameter ``\Lambda``. Remember that ``\Lambda`` is defined in such a way that ``\Lambda\rightarrow 0`` corresponds to a large output budget and ``\Lambda\rightarrow 1`` corresponds to a small output budget. Therefore, sliding the control to the right decreases the budget and sliding the control to the left increases the budget. You can see the function ``Q=Q(\Lambda)`` plotted in the top right panel of the display.
 
-The plots has three panels:
+The plots has four panels:
 - top left, the total output power ``Q`` as a function of the Lagrange multiplier ``\Lambda``, ``Q=Q(\Lambda)``.
-- top right, the gain ``\\sqrt{g_k}`` as a function of the 
+- top right, the gain ``\sqrt{g_k}`` as a function of the input power of the channel ``s_k``
+- bottom left, the output strength ``s_k\sqrt{g_k}`` as a function of ``s_k``
+- bottom right, the input and output strength compared for each of the 15 channels in our system. These are compared to the "noise floor" (minimum amount of output power, regardless of the signal and the gain) ``n_c``, which we have set equal to 1.
 
 #### What to pay attention to
 By playing with the interactive plot, it should be possible to find **two different coding regimes**.

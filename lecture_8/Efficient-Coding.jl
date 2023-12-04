@@ -114,7 +114,7 @@ begin
 	"""
 		total_output_power(s, Λ)
 
-	Compute the total output power \\Q=Q(\\Lambda)\\ for the van Hateren system defined by a set of input channels with power `s`.
+	Compute the total output power ``Q=Q(\\Lambda)`` for the van Hateren system defined by a set of input channels with power `s`.
 
 	# Arguments
 	- `s`: the stimulus power for all input channels, encoded as an array of standard deviations: s=``\\{s_1, \\ldots, s_K\\}``.

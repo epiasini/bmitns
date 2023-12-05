@@ -108,7 +108,7 @@ begin
 	Output power for a single channel with optimal gain, if the input power is sₖ (standard deviation) and the Lagrange multiplier is Λ.
 	"""
 	function output_power(sₖ, Λ)
-	    gain(sₖ, Λ)^2 * (1+sₖ^2) + 1
+	    return gain(sₖ, Λ)^2 * (1+sₖ^2) + 1
 	end
 
 	"""
@@ -395,9 +395,6 @@ begin
 	data_gdf = groupby(data, ["rat_batch", "rat_ID", "statistic", "statistic_intensity"], sort=false)
 
 	data = combine(data_gdf, :report_noise => (x -> [length(x) sum(x)]) => [:Ts, :Ns])
-	grouped_data = groupby(data, (["rat_batch", "rat_ID", "statistic"]), sort=false)
-
-	data
 end
 
 # ╔═╡ b32c0b97-4af8-402e-972d-0f6d5445ef7e
@@ -485,14 +482,14 @@ begin
 
 	function x_star(a, σ)
 		try
-			x_star = find_zero(D, 0, [a σ])
+			solution = find_zero(D, 0, [a σ])
 		catch e
 			# if σ is large enough and a is negative enough, the decision variable D is negative for all values of the measurement. In this regime, the measurement is so noisy and the prior is so shifted towards reporting the presence of the texture that the sensory evidence is completely disregarded, and the answer is always "texture" (never "noise"). In this case, the function call we use above to find x_star will fail with an error, because no zero of the D(x) function can be found. When this happens, we conventionally set x_star to negative infinity. When plugged into the expression for the response distribution, this will yield the desired effect that p(report noise|s)=0 for all values of s.
 			if isa(e, Roots.ConvergenceFailed)
 				if D(0, [a σ]) < 0
-					x_star = -Inf
+					solution = -Inf
 				else
-					x_star = Inf
+					solution = Inf
 				end
 			else
 				throw(e)
@@ -501,7 +498,7 @@ begin
 	end
 
 	function p_rep_noise(s, a, σ)
-		1 - cdf(Normal(), (s-x_star(a, σ))/σ)
+		return 1 - cdf(Normal(), (s-x_star(a, σ))/σ)
 	end
 end
 
@@ -588,7 +585,7 @@ Below we implement the calculation of ``LL`` given ``a``, ``\sigma`` and the dat
 begin
 	function LL(a, σ, s, Ts, Ns)
 	    ps = p_rep_noise.(s, a, σ)
-	    sum(@. Ns * log(ps) + (Ts-Ns) * log(1-ps))
+	    return sum(@. Ns * log(ps) + (Ts-Ns) * log(1-ps))
 	end
 end
 
@@ -601,17 +598,23 @@ Now we actually fit the model to each rat. The result is summarized in the table
 
 # ╔═╡ 02999c65-c4bc-4923-bd46-956dfe6aa90b
 begin
+	# to fit the model independently to the data for each rat, we start by defining a function that takes one rat's data and returns the fitted parameters for that rat.
 	function fit_model(s, Ts, Ns)
-		
+		# inside this function, we define a "loss function" to be minimized by the fitting procedure. This is just the (negative) log likelihood (defined in a cell above), with the data arguments s, Ts and Ns "frozen" to those of the rat under exam. The only actual arguments to the function are the model parameters a and σ. We pass these arguments to the function as a tuple (a, σ) because this is what the optimization procedure (the "optimize" function below) expects from the function to be optimized.
 		function function_to_be_minimized(params)
 		    a, σ = params
-			-LL(a, σ, s, Ts, Ns)
+			return -LL(a, σ, s, Ts, Ns)
 		end
-		
-		sol = optimize(function_to_be_minimized, [0.1, 0.4])
-		return [sol.minimizer[1] sol.minimizer[2]]
+		# for the particular optimization procedure we perform, we need to pick an initial guess for the solution. We pick a=0.1 and σ=0.4 as reasonable initial choices.
+		initial_guess = [0.1, 0.4]
+		# we can now find the minimum of our loss function. We do this by using the `optimize` function from the `Optim.jl` package, which by default uses the Nelder-Mead optimization algorithm (https://en.wikipedia.org/wiki/Nelder%E2%80%93Mead_method).
+		solution = optimize(function_to_be_minimized, initial_guess)
+		# the `optimize` function returns the solution as well as other information that we don't care too much about right now. We extract the values of a and σ that minimize the loss function and return those as output of our fit_model function.
+		return [solution.minimizer[1] solution.minimizer[2]]
 	end
 
+	# the following expressions may look a bit cryptic, and there's no need for you to understand exactly why this is written this way (but if you want to do so a good place to start is to look into split-apply-combine operations on dataframes: https://dataframes.juliadata.org/stable/man/split_apply_combine/). Anyway, all they do is to take our data, split it in smaller tables each one of which contains only the data for one rat, and then use the data from each of those smaller tables to call the fit_model function we just defined. This results in a fitted value of a and σ for each rat, which we finally combine in another table (printed as the output of this code cell).
+	grouped_data = groupby(data, (["rat_batch", "rat_ID", "statistic"]), sort=false)
 	fits = combine(grouped_data, [:statistic_intensity, :Ts, :Ns] => fit_model => [:a, :σ])
 end
 
@@ -2272,7 +2275,7 @@ version = "1.4.1+1"
 # ╟─d5134a14-67e7-483d-961d-e9f0b7be30a9
 # ╠═a4c03618-0ee9-419d-869d-3dd823c0ccf2
 # ╟─24920b7f-4022-4607-8460-f7d37dfb54b4
-# ╟─02999c65-c4bc-4923-bd46-956dfe6aa90b
+# ╠═02999c65-c4bc-4923-bd46-956dfe6aa90b
 # ╟─87cb2f98-14df-493c-bef9-154f622553ef
 # ╟─b9cc4989-4915-4c93-8d01-2172f6e5710a
 # ╟─f7e03313-4d88-4532-aafa-af8ab54c2fa6

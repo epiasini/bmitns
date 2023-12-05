@@ -503,7 +503,10 @@ begin
 	function p_rep_noise(s, a, σ)
 		1 - cdf(Normal(), (s-x_star(a, σ))/σ)
 	end
+end
 
+# ╔═╡ a240c360-429f-4bd6-a3dd-be1843917ddb
+begin
 	function plot_response_distribution(a, σ)
 		s_range = LinRange(0, 1, 50)
 		p = plot(s_range, p_rep_noise.(s_range, a, σ), legend=false)
@@ -2249,7 +2252,7 @@ version = "1.4.1+1"
 # ╟─3c9e3ee3-3398-4792-ba27-ea0636627faa
 # ╠═7152e1e9-f83d-4600-8245-e09dca2efec4
 # ╟─6141a7c6-02a5-442b-807d-de05e47e6e85
-# ╠═5edc3017-a0c4-433c-90f2-2d1d24c4bab7
+# ╟─5edc3017-a0c4-433c-90f2-2d1d24c4bab7
 # ╟─b1eef15f-03e5-4e22-8851-1ddb8fb0e239
 # ╟─0376373b-4908-41cf-b7ce-0b377af11b89
 # ╟─bec54691-1db8-4149-8b3c-0f6768a8e6a4
@@ -2262,7 +2265,8 @@ version = "1.4.1+1"
 # ╟─0355c0dd-7151-4de1-b37b-dc981f0940fa
 # ╟─7e4759f7-5507-4a15-9255-fd305ec9a1b3
 # ╟─b32c0b97-4af8-402e-972d-0f6d5445ef7e
-# ╟─d9ae60c9-0fd8-4c7b-a2d3-4fd737b507fc
+# ╠═d9ae60c9-0fd8-4c7b-a2d3-4fd737b507fc
+# ╟─a240c360-429f-4bd6-a3dd-be1843917ddb
 # ╟─dd829eb7-23a1-4b27-b9cf-82cfbf64226d
 # ╟─83e037e2-582b-4a20-992f-dc9fec9106d9
 # ╟─d5134a14-67e7-483d-961d-e9f0b7be30a9

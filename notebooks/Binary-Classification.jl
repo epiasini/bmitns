@@ -27,7 +27,7 @@ Note that unlike in the previous demo/notebook, I have left most of the code vis
 ## Description of the experiment
 We perform a classification experiment, where the stimulus ``s`` could belong to one of two classes (which we call ``1`` and ``0`` by convention). For instance, we may show to the subject an oriented grating of variable orientation ``s``, and we ask the subject to report whether the grating is oriented to the left ``s<0`` or to the right ``s>0``.
 
-$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_5/grating.svg", :width => 100))
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/grating.svg", :width => 100))
 
 In the lab, we perform ``N`` trials and for each trial ``t`` we record:
 - the true value of the stimulus, ``s_t`` (which is known to us: we are the ones generating the stimulus, so we know its true value)
@@ -38,11 +38,11 @@ To build our model of perception we make the following assumptions:
 - the **prior** is flat: ``p(c=1) = p(c=0) = 1/2``
 - the **class-conditional stimulus densities** (CCSD) are mirror-symmetric: ``p(s|c=0) = p(-s|c=1)``. A simple case satisfying this condition is when ``c=1`` means that ``s`` is sampled uniformly from a set of possible positive values ``0 < s_1 < s_2, \ldots, S_K``, and ``c=0`` means that ``s`` is sampled uniformly from the set of corresponding negative values: ``0 > -s_1 > -s_2 > \ldots > -S_K``, like in the figure below. For concreteness, this is the case we will use in this notebook.
 
-$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_5/ccsd_discrete.png", :width => 400))
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/ccsd_discrete.png", :width => 400))
 
 However, the results don't change as long as the CCSDs maintain the same symmetry, like these ones:
 
-$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_5/ccsd_skewed_gaussian.png", :width => 400))
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/ccsd_skewed_gaussian.png", :width => 400))
 
 - the **measurement distribution**/likelihood function is, as usual, Gaussian: ``p(x|s) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left[\frac{-(x-s)^2}{2\sigma^2}\right]``
 

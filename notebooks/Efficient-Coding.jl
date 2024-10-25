@@ -34,7 +34,7 @@ Here I have implemented an interactive diagram to illustrate the ideas in [Van H
 
 The setting is that of the figure below:
 
-$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Hermundstad2014_supplement_extract.png", :width => 600))
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/Hermundstad2014_supplement_extract.png", :width => 600))
 
 We have ``K`` channels, ``k\in\{1,2,\ldots,K\}``. You can think about them as ``K`` different neurons or neural pathways conveying information about different features of, say, a visual stimulus. For each channel, the input (we'll also call it "stimulus") is normally distributed around 0 with standard deviation ``s_k``.
 
@@ -233,7 +233,7 @@ We will now discuss the work of [Caramellino et al 2021](https://doi.org/10.7554
 
 This paper studies the perception of *visual textures*. Intuitively, you can think of a visual texture as of the collection semi-structured visual patterns or motifs that characterize the surface of objects. Importantly, although textures could be composed by smaller discrete elements discernible at a close inspection, the texture is always made up by a large number of such elements. Some examples are "foliage", or "wood grain", or "grass", or "gravel" . Here are a couple of examples of visual textures, just to make the idea more concrete (from [Portilla and Simoncelli 2000](https://doi.org/10.1023/A:1026553619983)):
 
-$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Portilla2000_examples.jpg", :width => 400))
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/Portilla2000_examples.jpg", :width => 400))
 
 For the purpose of this study, we will only consider visual features that correspond to correlations between neighboring pixels of an image. The idea that relatively simple correlation patterns are important for texture perception goes back to [Julesz 1962](https://doi.org/10.1109/TIT.1962.1057698). Moreover, we will only work with "binary" black and white images composed only of black or white pixels.
 
@@ -243,7 +243,7 @@ Texture processing is believed to happen mostly in intermediate visual cortical 
 
 Here's a figure from [Hermundstad et al, eLife 2014](https://doi.org/10.7554/eLife.03722) that explains how **pixel correlations (and, importantly, their variability from image patch to image patch)** are measured from a database of natural images.
 
-$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Hermundstad2014_fig_1.png", :width => 800))
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/Hermundstad2014_fig_1.png", :width => 800))
 
 """
 
@@ -357,7 +357,7 @@ sample_texture(statistic, level, 100)
 md"""
 The figure below is taken from [Caramellino et al, eLife 2021](https://doi.org/10.7554/eLife.72081) and explains the task in rats. This is a binary classification task (yes/no task). On each trial, the rat sees one image, which could be either a random sample of white noise (black and white pixels fully at random) or a sample from a maximum-entropy texture with a given intensity of a certain correlation (like the images you can generate above). The task of the rat is to report whether the image was fully random (white noise) or structured (texture). Conceptually, this allows to measure the sensitivity of the rat to different pixel statistics/texture patterns by seeing how far away, along different axes, the structured stimulus needs to be from the origin of the space (white noise) to be distinguishable from it.
 
-$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Caramellino2021_fig_1.png", :width => 800))
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/Caramellino2021_fig_1.png", :width => 800))
 
 """
 
@@ -517,7 +517,8 @@ begin
 		s_range = LinRange(-0.3, 1, 50)
 		p1 = plot(s_range, D.(s_range, Ref([a, σ])), legend=false)
 		hline!([0], color=:red)
-		xs = x_star(a, σ)
+		xs = x_star(a
+, σ)
 		if isfinite(xs)
 			vline!([xs], color=:red)
 			annotate!(xs, ylims()[1], Plots.text("\$x^*\$", :red, :bottom, :left))
@@ -682,7 +683,7 @@ end
 md"""
 A little reminder of what "gamma, beta, theta, alpha" mean:
 
-$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Hermundstad2014_fig_1_extract.png", :width => 600))
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/Hermundstad2014_fig_1_extract.png", :width => 600))
 """
 
 # ╔═╡ 320feafb-9821-4486-be69-a811b61376fe
@@ -711,7 +712,7 @@ md"""
 
 To conclude, we can finally test our efficient coding hypothesis --- that rats should be more sensitive to patterns that are more variable in natural images. So we can plot on the same axis the sensitivities we just computed and the standard deviations of the distribution of the statistic intensities in natural images (after an appropriate normalization). While we are at it, we also include the data on **human** (not rat) sensitivity obtained with an analogous experiment by Hermundstad et al 2014.
 
-$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/lecture_8/Hermundstad2014_fig_3A.png", :width => 600))
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/Hermundstad2014_fig_3A.png", :width => 600))
 """
 
 # ╔═╡ ca37fbfb-d715-4dcc-a1f3-7459d8904df7

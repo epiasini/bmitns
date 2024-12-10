@@ -351,7 +351,7 @@ end
 md"""
 In this study, the visual stimuli will be synthetic visual textures that have a certain degree of two-point, three-point, or four-point correlations, and that contain the minimum amount of statistical structure given that constraint. The idea is that we want to estimate rat sensitivity to specific pixel correlation patterns, so to reduce confounds to the minimum we will work with visual stimuli that in some sense "contain only" those correlation patterns. 
 
-Such textures can be mathematically defined as **maximum-entropy textures** where we maximise the entropy of the texture seen as a random variable, subject to a constraint on the value of the desired correlation. This mathematical construction, due to [Victor and Conte, J Opt Soc Am 2012](https://doi.org/10.1364/JOSAA.29.001313), allows us to define a 10-dimensional **"texture space"** where each axis corresponds to a different correlation pattern. Each of these axes has a name, denoted by a greek letter and (optionally) a symbol. You can find the description of each of the coordinate axes in the figure reproduced above from Hermundstad 2014. Note that the origin of this texture space (that is, the point where each of the coordinates is 0) corresponds to the case of a so-called **"white noise"** texture, which is the trivial texture where each pixel is sampled independently as black or white with 50/50 probability.
+Such textures can be mathematically defined as **maximum-entropy textures** where we maximize the entropy of the texture seen as a random variable, subject to a constraint on the value of the desired correlation. This mathematical construction, due to [Victor and Conte, J Opt Soc Am 2012](https://doi.org/10.1364/JOSAA.29.001313), allows us to define a 10-dimensional **"texture space"** where each axis corresponds to a different correlation pattern. Each of these axes has a name, denoted by a greek letter and (optionally) a symbol. You can find the description of each of the coordinate axes in the figure reproduced above from Hermundstad 2014. Note that the origin of this texture space (that is, the point where each of the coordinates is 0) corresponds to the case of a so-called **"white noise"** texture, which is the trivial texture where each pixel is sampled independently as black or white with 50/50 probability.
 
 The (hidden) function above implements Victor and Conte's algorithm for synthetic texture generation. To get a sense for how these textures look like, you can play with the generator below. 
 
@@ -414,11 +414,11 @@ To interpret this data, we are going to build a Bayesian model of the perceptual
 ### Step 1 - generative model
 On any given trial, the nominal (true) value of the statistic is some value ``s``. The rats have to report whether the texture is white noise (``s=0``) or not. Note that in the experiment design only the positive axis of the texture space was used, so the two alternatives in practice are ``s=0`` and ``0<s<1``.
 
-Because the texture has finite size, the empirical value of the statistic in the texture will be somewhat different from ``s``. We lump this uncertainty together with that induced by the animal’s perceptual process, and we say that any given trial results on the production of a percept ``x``, normally distributed around ``s``:
+Because the texture has finite size, the empirical value of the statistic in the texture will be somewhat different from ``s``. We lump this uncertainty together with that induced by the animal’s perceptual process, and we say that any given trial results on the production of a *measurement* ``x``, normally distributed around ``s``:
 ```math
 p(x|s) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left[-\frac{(x-s)^2}{2\sigma^2}\right]
 ```
-Note that this means that when ``s=1`` the actual percept will be some ``x>1`` about half of the time. This doesn't really make sense given how the statistic is defined (because ``-1\leq s \leq 1`` by construction), but we will ignore this fact here for the sake of simplicity.
+Note that this means that when ``s=1`` the actual measurement will be some ``x>1`` about half of the time. This doesn't really make sense given how the statistic is defined (because ``-1\leq s \leq 1`` by construction), but we will ignore this fact here for the sake of simplicity.
 
 We will assume that each rat has some unknown prior over the alternatives (``s=0``, ``s>0``). We will parameterize the prior with the log odds:
 ```math
@@ -456,10 +456,10 @@ which we can rewrite
 ```
 
 ### Step 3 - response distribution
-Now, remember that *given a value of the percept ``x``*, the
+Now, remember that *given a value of the measurement ``x``*, the
 decision rule based on ``D`` is fully deterministic (maximum a
 posteriori estimate). But on any given trial we don't know the value
-of the percept --- we only know the nominal value of the statistic. On
+of the measurement --- we only know the nominal value of the statistic. On
 the other hand, our assumptions above specify the distribution
 ``p(x|s)`` for any ``s``, so the deterministic mapping ``D(x)`` means that
 we can compute the probability of reporting "noise" as

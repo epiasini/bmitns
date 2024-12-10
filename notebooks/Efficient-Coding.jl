@@ -556,7 +556,7 @@ plot_decision_variable_and_response_distribution(a, σ)
 md"""
 ### Step 4 - fitting the model
 Independently for each rat, we infer a value of ``a`` and ``\sigma``
-by maximising the likelihood of the data under the model above. More
+by maximizing the likelihood of the model for the data of the given rat. More
 in detail, for a given rat and a given statistic value ``s`` (including
 0), we call ``N_s`` the number of times the rat reported "noise", and
 ``T_s`` the total number of trials. For a given fixed value of ``a``
@@ -595,8 +595,10 @@ Below we implement the calculation of ``LL`` given ``a``, ``\sigma`` and the dat
 # ╔═╡ a4c03618-0ee9-419d-869d-3dd823c0ccf2
 begin
 	function LL(a, σ, s, Ts, Ns)
-	    ps = p_rep_noise.(s, a, σ)
-	    return sum(@. Ns * log(ps) + (Ts-Ns) * log(1-ps))
+		# given the parameters (a, σ) for the ideal observer, compute the probability of reporting 'noise' for each level of the statistic
+		ps = p_rep_noise.(s, a, σ)
+		# using the experimental data described by (s,Ts,Ns), compute log-likelihood according to formula given above in the text
+		return sum(@. Ns * log(ps) + (Ts-Ns) * log(1-ps))
 	end
 end
 

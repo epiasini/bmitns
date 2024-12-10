@@ -57,7 +57,7 @@ Then, the signal gets processed by our neuron/neural system of interest. To keep
 After encoding, the signal is transmitted downstream for further processing. For instance, if the previous steps describe the operation of sensory transduction and encoding in the retina, this step represents transmission down the optic nerve towards the rest of the brain. We assume that this step also introduces some degree of noise, normally distributed with standard deviation ``n_c``. Therefore, the final output of our system is
 
 ```math
-\text{output } \sim\mathcal{N}\left(0,\sqrt{g_k\left(s_k^2+n_s^2\right)+n_c}\right)
+\text{output } \sim\mathcal{N}\left(0,\sqrt{g_k\left(s_k^2+n_s^2\right)+n_c^2}\right)
 ```
 
 Finally, we assume that there is some constraint to the sigal that we can transmit in our output. For example, there could be a metabolic cost to generating signals which limits the firing rates of our neurons. We model this cost by assuming that we have a certain **output budget**, expressed as a constraint on the total variance ``Q`` of the output:
@@ -65,7 +65,7 @@ Finally, we assume that there is some constraint to the sigal that we can transm
 ```math
 \begin{equation}
 \tag{1}
-Q = \sum_{k=1}^K\operatorname{Var}\left[\text{output}_k\right] = \sum_{k=1}^K \left[g_k\left(s_k^2+n_s^2\right)+n_c\right] \equiv\text{constant}
+Q = \sum_{k=1}^K\operatorname{Var}\left[\text{output}_k\right] = \sum_{k=1}^K \left[g_k\left(s_k^2+n_s^2\right)+n_c^2\right] \equiv\text{constant}
 \end{equation}
 ```
 

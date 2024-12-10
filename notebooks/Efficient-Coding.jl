@@ -135,7 +135,7 @@ The other parameter we can manipulate in the interactive plot is the output budg
 The plots has four panels:
 - top left, the total output power ``Q`` as a function of the Lagrange multiplier ``\Lambda``, ``Q=Q(\Lambda)``.
 - top right, the gain ``\sqrt{g_k}`` as a function of the input power of the channel ``s_k``
-- bottom left, the output strength ``s_k\sqrt{g_k}`` as a function of ``s_k``
+- bottom left, the output strength (or "dynamic range") ``s_k\sqrt{g_k}`` as a function of ``s_k``
 - bottom right, the input and output strength compared for each of the 15 channels in our system. These are compared to the "noise floor" (minimum amount of output power, regardless of the signal and the gain) ``n_c``, which we have set equal to 1.
 
 #### What to pay attention to
@@ -194,9 +194,9 @@ begin
 	    xlabel!("Input strength for a given channel, \$s_k\$")
 	    ylabel!("Output strength \$s_k\\sqrt{g_k}\$")
 	    
-	    p4 = bar((0:length(s)-1).+0.2, s, bar_width=0.4, label="Input signal strength")
-	    bar!((0:length(s)-1).-0.2, sqrt.(output_power.(s, Λ)), bar_width=0.4, label="Output dynamic range")
-	    hline!([1], label="Noise floor", linewidth=2)
+	    p4 = bar((0:length(s)-1).+0.2, s, bar_width=0.4, label="Input strength")
+	    bar!((0:length(s)-1).-0.2, sqrt.(output_power.(s, Λ)), bar_width=0.4, label="Output strength")
+	    hline!([1], label="Noise floor \$n_c\$", linewidth=2)
 	    xticks!(([0, 7, 14], ["1", "8", "15"]))
 	    xlabel!("Channel")
 	    ylabel!("Dynamic range")
@@ -245,7 +245,7 @@ This paper studies the perception of *visual textures*. Intuitively, you can thi
 
 $(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/Portilla2000_examples.jpg", :width => 400))
 
-For the purpose of this study, we will only consider visual features that correspond to correlations between neighboring pixels of an image. The idea that relatively simple correlation patterns are important for texture perception goes back to [Julesz 1962](https://doi.org/10.1109/TIT.1962.1057698). Moreover, we will only work with "binary" black and white images composed only of black or white pixels.
+For the purpose of this study, **we will only consider visual features that correspond to correlations between neighboring pixels of an image**. The idea that relatively simple correlation patterns are important for texture perception goes back to [Julesz 1962](https://doi.org/10.1109/TIT.1962.1057698). Moreover, we will only work with "binary" black and white images composed only of black or white pixels.
 
 Texture processing is believed to happen mostly in intermediate visual cortical areas. In this situation, and in reference to the theoretical ideas discussed above, the "transmission budget" for the output is assumed to be high due to the dense connectivity within and across cortical circuits (compare to the retina, where the optic nerve forms a bottleneck for information transmission to cortex). At the same time, textures are here assumed to be represented by multi-point pixel correlations, and it may be hard to obtain an accurate estimate of these high-order statistics from an image patch. Therefore, we are in the **sampling limited** regime in the discussion above --- the regime where we have high budget but weak signal. In this regime, efficient coding predicts that visual cortex should be more more sensitive to correlation patterns that have larger variability across natural scenes, and less sensitive to less variable patterns. **We will test this prediction at the behavioral level, asking whether rats show higher visual sensitivity to artificial textures that contain patterns that are more variable in natural images, and vice versa.**
 

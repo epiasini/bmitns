@@ -140,8 +140,18 @@ The plots has four panels:
 
 #### What to pay attention to
 By playing with the interactive plot, it should be possible to find **two different coding regimes**.
-- **``\Lambda\rightarrow 1^-, s_k\gg 1``, Transmission limited regime:** When stimuli are strong enough and the main constraint is output noise/bandwidth limitation, weaker input signals should be amplified more than stronger ones: neural gain should decrease as signal variability (strength) increases.
-- **``\Lambda\rightarrow 0^+, s_k\rightarrow 0``, Sampling limited regime:** When the main limitation is noise corrupting the input (weak signals and large budget), weaker signals cannot be recovered by amplification, so neural gain should increase as signal variability (strength) increases.
+- **``\Lambda\rightarrow 1^-, s_k\gg 1``, Transmission limited regime:** When stimuli are strong enough and the main constraint is output noise/bandwidth limitation, weaker input signals should be amplified more than stronger ones: **neural gain should decrease as signal variability (strength) increases**,
+```math
+\sqrt{g_k}\sim \frac{1}{s_k}
+```
+so that the output power is approximately constant for large ``s_k`` (and the output is "equalized" across channels),
+```math
+\operatorname{Std}[\text{output}_k]\sim \sqrt{g_k}\cdot s_k = \frac{s_k}{s_k} \equiv \text{constant} .
+```
+- **``\Lambda\rightarrow 0^+, s_k\rightarrow 0``, Sampling limited regime:** When the main limitation is noise corrupting the input (weak signals and large budget), weaker signals cannot be recovered by amplification, so **neural gain should increase as signal variability (strength) increases**,
+```math
+\sqrt{g_k} \sim \frac{\sqrt{s_k}}{\sqrt[4]{\Lambda}} .
+```
 """
 
 # ╔═╡ 5edc3017-a0c4-433c-90f2-2d1d24c4bab7

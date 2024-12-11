@@ -154,6 +154,18 @@ so that the output power is approximately constant for large ``s_k`` (and the ou
 ```
 """
 
+# ╔═╡ b1eef15f-03e5-4e22-8851-1ddb8fb0e239
+md"""
+Lagrange multiplier controlling the output variance budget: ``Λ=``$(@bind budget Slider(0.01:0.01:0.99, default=0.5, show_value=true))
+
+log signal strength (global level): ``\log_{10}(s)=``$(@bind log_input_strength Slider(-2:0.01:2, default=0, show_value=true))
+"""
+
+# ╔═╡ 0376373b-4908-41cf-b7ce-0b377af11b89
+md"""
+The global signal strength is ``s=`` $(@sprintf("%.2f", 10^(log_input_strength))). Remember that the actual signal strength values ``s_k`` are 15 numbers distributed in regular intervals between ``s/2`` and ``2s``.
+"""
+
 # ╔═╡ 5edc3017-a0c4-433c-90f2-2d1d24c4bab7
 begin
 	function plot_gain_from_budget(Λ, input_strength)
@@ -206,18 +218,6 @@ begin
 	end
 end
 
-# ╔═╡ b1eef15f-03e5-4e22-8851-1ddb8fb0e239
-md"""
-Lagrange multiplier controlling the output variance budget: ``Λ=``$(@bind budget Slider(0.01:0.01:0.99, default=0.5, show_value=true))
-
-log signal strength (global level): ``\log_{10}(s)=``$(@bind log_input_strength Slider(-2:0.01:2, default=0, show_value=true))
-"""
-
-# ╔═╡ 0376373b-4908-41cf-b7ce-0b377af11b89
-md"""
-The global signal strength is ``s=`` $(@sprintf("%.2f", 10^(log_input_strength))). Remember that the actual signal strength values ``s_k`` are 15 numbers distributed in regular intervals between ``s/2`` and ``2s``.
-"""
-
 # ╔═╡ bec54691-1db8-4149-8b3c-0f6768a8e6a4
 plot_gain_from_budget(budget, 10^(log_input_strength))
 
@@ -241,7 +241,7 @@ md"""
 
 We will now discuss the work of [Caramellino et al 2021](https://doi.org/10.7554/eLife.72081), which is part of a larger body of research including [Victor and Conte 2012](https://doi.org/10.1364/JOSAA.29.001313), [Hermundstad et al 2014](https://doi.org10.7554/eLife.03722), and [Tesileanu et al 2020](https://doi.org/10.7554/eLife.54347).
 
-This paper studies the perception of *visual textures*. Intuitively, you can think of a visual texture as of the collection semi-structured visual patterns or motifs that characterize the surface of objects. Importantly, although textures could be composed by smaller discrete elements discernible at a close inspection, the texture is always made up by a large number of such elements. Some examples are "foliage", or "wood grain", or "grass", or "gravel" . Here are a couple of examples of visual textures, just to make the idea more concrete (from [Portilla and Simoncelli 2000](https://doi.org/10.1023/A:1026553619983)):
+This paper studies the perception of *visual textures*. Intuitively, you can think of a visual texture as of **the collection semi-structured visual patterns or motifs that characterize the surface of objects**. Importantly, although textures could be composed by smaller discrete elements discernible at a close inspection, the texture is always made up by a large number of such elements. Some examples are "foliage", or "wood grain", or "grass", or "gravel" . Here are a couple of examples of visual textures, just to make the idea more concrete (from [Portilla and Simoncelli 2000](https://doi.org/10.1023/A:1026553619983)):
 
 $(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/Portilla2000_examples.jpg", :width => 400))
 
@@ -2382,9 +2382,9 @@ version = "1.4.1+1"
 # ╟─3c9e3ee3-3398-4792-ba27-ea0636627faa
 # ╠═7152e1e9-f83d-4600-8245-e09dca2efec4
 # ╟─6141a7c6-02a5-442b-807d-de05e47e6e85
-# ╟─5edc3017-a0c4-433c-90f2-2d1d24c4bab7
 # ╟─b1eef15f-03e5-4e22-8851-1ddb8fb0e239
 # ╟─0376373b-4908-41cf-b7ce-0b377af11b89
+# ╟─5edc3017-a0c4-433c-90f2-2d1d24c4bab7
 # ╟─bec54691-1db8-4149-8b3c-0f6768a8e6a4
 # ╟─76c171fb-9253-4d37-90a6-b6d756d6530d
 # ╟─3da433c1-9d02-48e2-9da5-b1adb3d6f504

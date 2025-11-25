@@ -420,13 +420,18 @@ begin
 	data = combine(data_gdf, :report_noise => (x -> [length(x) sum(x)]) => [:Ts, :Ns])
 end
 
-# ╔═╡ b32c0b97-4af8-402e-972d-0f6d5445ef7e
+# ╔═╡ 5d55cfeb-32e7-4749-a245-a54b446660da
 md"""
 To interpret this data, we are going to build a Bayesian model of the perceptual process of the rat. We will simplify a bit the approach taken in Caramellino et al 2021, while keeping the essential components. Some of the text below is adapted from the paper.
 
 ### Step 1 - generative model
-On any given trial, the nominal (true) value of the statistic is some value ``s``. The rats have to report whether the texture is white noise (``s=0``) or not. Note that in the experiment design only the positive axis of the texture space was used, so the two alternatives in practice are ``s=0`` and ``0<s<1``.
+On any given trial, the nominal (true) value of the statistic is some value ``s``. The rats have to report whether the texture is white noise (``s=0``) or not. Note that in the experiment design only the positive axis of the texture space was used, so the two alternatives in practice are ``s=0`` and ``0<s<1``. For stimuli where the texture was present (``0<s<1``), only a discrete set of values of ``s`` was used. The resulting class-conditioned stimulus distributions (CCSDs) are shown below.
 
+$(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/caramellino_ccsd.png", :width => 800))
+"""
+
+# ╔═╡ b32c0b97-4af8-402e-972d-0f6d5445ef7e
+md"""
 Because the texture has finite size, the empirical value of the statistic in the texture will be somewhat different from ``s``. We lump this uncertainty together with that induced by the animal’s perceptual process, and we say that any given trial results on the production of a *measurement* ``x``, normally distributed around ``s``:
 ```math
 p(x|s) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left[-\frac{(x-s)^2}{2\sigma^2}\right]
@@ -2405,14 +2410,15 @@ version = "1.4.1+1"
 # ╟─5edc3017-a0c4-433c-90f2-2d1d24c4bab7
 # ╟─bec54691-1db8-4149-8b3c-0f6768a8e6a4
 # ╟─76c171fb-9253-4d37-90a6-b6d756d6530d
-# ╟─3da433c1-9d02-48e2-9da5-b1adb3d6f504
+# ╠═3da433c1-9d02-48e2-9da5-b1adb3d6f504
 # ╟─f842c227-f4e4-4a8a-95b3-c9a161c5c5b7
 # ╟─e2063dee-b706-4147-aff8-a8575d7f97c2
 # ╠═1b034394-1775-4ea8-8fc3-38832494c4d2
 # ╟─dfea496b-f89b-4845-8df5-fc11504499e3
 # ╟─0355c0dd-7151-4de1-b37b-dc981f0940fa
 # ╟─7e4759f7-5507-4a15-9255-fd305ec9a1b3
-# ╟─b32c0b97-4af8-402e-972d-0f6d5445ef7e
+# ╟─5d55cfeb-32e7-4749-a245-a54b446660da
+# ╠═b32c0b97-4af8-402e-972d-0f6d5445ef7e
 # ╠═d9ae60c9-0fd8-4c7b-a2d3-4fd737b507fc
 # ╟─a240c360-429f-4bd6-a3dd-be1843917ddb
 # ╟─dd829eb7-23a1-4b27-b9cf-82cfbf64226d

@@ -36,7 +36,7 @@ In the lab, we perform ``N`` trials and for each trial ``t`` we record:
 # Building the model
 To build our model of perception we make the following assumptions:
 - the **prior** is flat: ``p(c=1) = p(c=0) = 1/2``
-- the **class-conditional stimulus densities** (CCSD) are mirror-symmetric: ``p(s|c=0) = p(-s|c=1)``. A simple case satisfying this condition is when ``c=1`` means that ``s`` is sampled uniformly from a set of possible positive values ``0 < s_1 < s_2, \ldots, S_K``, and ``c=0`` means that ``s`` is sampled uniformly from the set of corresponding negative values: ``0 > -s_1 > -s_2 > \ldots > -S_K``, like in the figure below. For concreteness, this is the case we will use in this notebook.
+- the **class-conditioned stimulus densities** (CCSD) are mirror-symmetric: ``p(s|c=0) = p(-s|c=1)``. A simple case satisfying this condition is when ``c=1`` means that ``s`` is sampled uniformly from a set of possible positive values ``0 < s_1 < s_2, \ldots, S_K``, and ``c=0`` means that ``s`` is sampled uniformly from the set of corresponding negative values: ``0 > -s_1 > -s_2 > \ldots > -S_K``, like in the figure below. For concreteness, this is the case we will use in this notebook.
 
 $(Resource("https://raw.githubusercontent.com/epiasini/bmitns/main/notebooks/figures/ccsd_discrete.png", :width => 400))
 

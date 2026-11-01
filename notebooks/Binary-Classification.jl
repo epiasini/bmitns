@@ -160,7 +160,7 @@ function simulate_experiment(σ, N)
 	
     # relative amount of trials to be allocated to each level. By default this is uniform (all numbers are equal to nₛ as passed to this function), but you can try changing it to see what happens. Note that if you "weigh" one stimulus level a lot by putting more trials there than in other levels, the fit will automatically value that datapoint more than the others, trying to make the fitted curve approach more the data at that point. This is very useful, as often in the lab one ends up with more data in certain conditions than others.
     trial_distribution = ones(length(s))
-	# for instance, if you want to put more weight on one particular datapoint, you can uncomment the following line
+	# for instance, if you want to put more weight on one particular datapoint, you can uncomment the following line (note that this is possible only if you are running the notebook locally on your computer - see the link on the top right of the page on how to install and run Pluto)
 	# trial_distribution = [1,1,1,1,1,1,1,1,10,1,1]
 	trial_distribution /= sum(trial_distribution)
 	

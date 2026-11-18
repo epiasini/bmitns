@@ -208,7 +208,7 @@ begin
 	    plot!(s, gain.(s, Λ), color=:red)
 	    title!("Neural gain")
 	    xlabel!(L"Input strength for a given channel, $s_k$")
-	    ylabel!(L"Channel gain, $g_k$")
+	    ylabel!(L"Channel gain, $\sqrt{g_k}$")
 
 		p3 = plot(s, s.*gain.(s, Λ_range[1]), color=:gray, linewidth=0.2, legend=false)
 	    for l in Λ_range[2:end]
